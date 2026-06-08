@@ -201,6 +201,24 @@
     margin: 0;
   }
 
+  .report-card-executive-summary {
+    border: 1px solid #d8e0ea;
+    border-radius: 6px;
+    padding: 0.65rem 0.75rem 0.7rem;
+    background: #f8fafc;
+  }
+
+  .report-card-executive-content p {
+    margin: 0 0 0.4rem;
+    font-size: 8.5pt;
+    line-height: 1.5;
+    color: #334155;
+  }
+
+  .report-card-executive-content p:last-child {
+    margin-bottom: 0;
+  }
+
   .report-card-tables-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -309,7 +327,7 @@
 
   .report-card-bottom-compact {
     display: grid;
-    grid-template-columns: 0.9fr 1.1fr;
+    grid-template-columns: 1.1fr 0.9fr;
     gap: 0.6rem;
   }
 
@@ -386,8 +404,7 @@
   .report-card-opportunities {
     border: 1px solid #d8e0ea;
     border-radius: 6px;
-    padding: 0.75rem 0.85rem 0.85rem;
-    margin-top: 0.25rem;
+    padding: 0.65rem 0.75rem 0.7rem;
     flex: 1;
   }
 
@@ -524,6 +541,16 @@
   .report-card-final-score,
   .report-card-final-label {
     font-size: 7pt !important;
+  }
+
+  .report-card-executive-summary {
+    padding: 0.35rem 0.45rem !important;
+  }
+
+  .report-card-executive-content p {
+    font-size: 6.5pt !important;
+    margin-bottom: 0.2rem !important;
+    line-height: 1.35 !important;
   }
 
   .report-card-section-heading,

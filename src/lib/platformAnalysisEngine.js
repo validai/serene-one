@@ -229,9 +229,9 @@ const DEFAULT_TEMPLATE = {
 const GRADE_STATUS = {
   A: 'Excellent',
   B: 'Strong',
-  C: 'Needs Improvement',
-  D: 'Weak',
-  F: 'Urgent Attention',
+  C: 'Developing',
+  D: 'Limited',
+  F: 'Critical',
 };
 
 const GRADE_PRIORITY = {

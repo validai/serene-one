@@ -37,24 +37,25 @@ const SHORT_PLATFORM_RECOMMENDATIONS = {
   'Homes.com': 'Refresh agent credentials',
 };
 
-const SHORT_STEP_PHRASES = {
-  critical: [
-    'Improve profile completeness',
+const VISIBILITY_DIMENSIONS = new Set(['visibility', 'seo']);
+const TRUST_DIMENSIONS = new Set(['trust', 'brandConsistency']);
+const GROWTH_DIMENSIONS = new Set(['conversion', 'content']);
+
+const OPPORTUNITY_FALLBACKS = {
+  visibility: [
     'Strengthen local visibility signals',
+    'Improve profile completeness',
+    'Expand discoverability across search channels',
+  ],
+  trust: [
     'Address trust signal gaps',
-    'Fix SEO foundation issues',
-  ],
-  easyWins: [
-    'Refresh outdated visuals',
-    'Add location/service keywords',
     'Request recent customer reviews',
-    'Unify profile imagery',
+    'Align credentials and contact details',
   ],
-  opportunities: [
-    'Increase recent content activity',
-    'Strengthen call-to-action',
-    'Build cross-platform links',
+  growth: [
+    'Strengthen call-to-action clarity',
     'Establish content publishing cadence',
+    'Build cross-platform conversion paths',
   ],
 };
 
@@ -114,51 +115,121 @@ function buildPlatformRows(platformInspections) {
   }));
 }
 
-function buildInspectorNotes(inspection, scoring, platformInspections, findings) {
+function getScoreExtremes(scores) {
+  const ranked = GRADING_CATEGORIES.map(({ key, label }) => ({
+    label,
+    score: scores[key],
+  })).sort((a, b) => a.score - b.score);
+
+  return {
+    strongest: ranked[ranked.length - 1],
+    weakest: ranked[0],
+  };
+}
+
+function buildExecutiveSummary(inspection, scoring, platformInspections, findings) {
+  const { businessName, businessType } = inspection;
+  const status = getGradeStatusLabel(scoring.overallGrade);
   const count = platformInspections.length;
-  const platformList = platformInspections.map((pi) => pi.platform).join(', ');
+  const platforms = platformInspections.map((pi) => pi.platform).join(', ');
+  const { strongest, weakest } = getScoreExtremes(scoring.scores);
+  const businessContext = businessType.toLowerCase();
+
+  const priorityClause =
+    findings.critical.length > 0
+      ? `Near-term priority should be ${findings.critical[0].title.toLowerCase()}, which carries the highest impact on discovery and buyer confidence.`
+      : 'Current evidence indicates a stable foundation with room to sharpen consistency and engagement across channels.';
+
+  return [
+    `This assessment evaluates ${businessName}'s digital presence across ${count} active platform${count !== 1 ? 's' : ''} (${platforms}). The business earns an overall ${status} rating (${scoring.overallScore}/100), reflecting how discoverable, credible, and conversion-ready the brand appears to prospective clients in a ${businessContext} market.`,
+    `${strongest.label} is the strongest performance area in this review; ${weakest.label} represents the most immediate lever for measurable improvement. ${priorityClause}`,
+    `The opportunities outlined below are sequenced by strategic impact—visibility, trust, and growth—aligned with how customers evaluate and select ${businessContext} providers online.`,
+  ];
+}
+
+function buildInspectorNotes(inspection, scoring, findings) {
+  const { businessName } = inspection;
+  const status = getGradeStatusLabel(scoring.overallGrade).toLowerCase();
+  const lowScoreAreas = GRADING_CATEGORIES.filter(
+    ({ key }) => scoring.scores[key] < 75
+  ).map(({ label }) => label.toLowerCase());
 
   const notes = [
-    `${inspection.businessName} received an overall grade of ${scoring.overallGrade} (${scoring.overallScore}/100) from ${count} submitted platform screenshot${count !== 1 ? 's' : ''}: ${platformList}.`,
+    `Serene One's review positions ${businessName}'s digital footprint as ${status} relative to category benchmarks. Profiles were assessed for completeness, messaging consistency, and the trust signals that influence purchase decisions before first contact.`,
   ];
 
-  if (findings.critical.length > 0) {
+  if (lowScoreAreas.length > 0) {
     notes.push(
-      `Priority focus: ${findings.critical
-        .slice(0, 2)
-        .map((f) => f.title)
-        .join('; ')}.`
+      `Material gaps were observed in ${lowScoreAreas.slice(0, 3).join(', ')}—dimensions that shape discovery, credibility, and conversion. These can be addressed through focused profile updates, review generation, and clearer calls-to-action rather than a full-channel rebuild.`
     );
   } else {
     notes.push(
-      'Submitted evidence supports a point-in-time review of visibility, trust, and brand consistency signals.'
+      'Core profiles demonstrate solid alignment across inspected channels. Continued investment in fresh content, review velocity, and cross-linking will help sustain momentum against competitors active in the same local market.',
+    );
+  }
+
+  if (findings.critical.length > 0) {
+    notes.push(
+      `We recommend prioritizing ${findings.critical
+        .slice(0, 2)
+        .map((f) => f.title.toLowerCase())
+        .join(' and ')} in the next planning cycle before expanding into secondary channels or paid acquisition.`,
+    );
+  } else {
+    notes.push(
+      'No urgent remediation items were flagged in this cycle. The next phase should emphasize incremental gains—bio refreshes, imagery alignment, and a steady publishing rhythm—to compound visibility over the next 90 days.',
     );
   }
 
   return notes.slice(0, 3);
 }
 
+function assignFindingToBucket(finding) {
+  const { dimension, category } = finding;
+
+  if (dimension && VISIBILITY_DIMENSIONS.has(dimension)) return 'visibility';
+  if (dimension && TRUST_DIMENSIONS.has(dimension)) return 'trust';
+  if (dimension && GROWTH_DIMENSIONS.has(dimension)) return 'growth';
+
+  if (category === 'critical') return 'visibility';
+  if (category === 'easy_win') return 'trust';
+  return 'growth';
+}
+
 function buildOpportunitiesSection(findings) {
-  const toAction = (finding, fallback) => ({
-    text: finding?.title ?? fallback,
-  });
+  const buckets = {
+    visibility: [],
+    trust: [],
+    growth: [],
+  };
+  const seen = new Set();
 
-  const priorityActions = findings.critical
-    .slice(0, 2)
-    .map((f, i) => toAction(f, SHORT_STEP_PHRASES.critical[i]));
+  for (const finding of [
+    ...findings.critical,
+    ...findings.easyWins,
+    ...findings.opportunities,
+  ]) {
+    if (seen.has(finding.title)) continue;
+    seen.add(finding.title);
 
-  const topRecommendedActions = findings.easyWins
-    .slice(0, 3)
-    .map((f, i) => toAction(f, SHORT_STEP_PHRASES.easyWins[i]));
+    const bucket = assignFindingToBucket(finding);
+    buckets[bucket].push({ text: finding.title });
+  }
 
-  const opportunityHighlights = findings.opportunities
-    .slice(0, 3)
-    .map((f, i) => toAction(f, SHORT_STEP_PHRASES.opportunities[i]));
+  for (const [bucket, fallbacks] of Object.entries(OPPORTUNITY_FALLBACKS)) {
+    let index = 0;
+    while (buckets[bucket].length < 2 && index < fallbacks.length) {
+      const fallback = fallbacks[index++];
+      if (!buckets[bucket].some((item) => item.text === fallback)) {
+        buckets[bucket].push({ text: fallback });
+      }
+    }
+  }
 
   return {
-    priorityActions,
-    topRecommendedActions,
-    opportunityHighlights,
+    visibilityOpportunities: buckets.visibility.slice(0, 3),
+    trustOpportunities: buckets.trust.slice(0, 3),
+    growthOpportunities: buckets.growth.slice(0, 3),
   };
 }
 
@@ -206,12 +277,13 @@ export function generateReport(inspection, scoring, findings, platformInspection
       label: 'Overall Digital Presence Grade',
       status: getGradeStatusLabel(scoring.overallGrade),
     },
-    inspectorNotes: buildInspectorNotes(
+    executiveSummary: buildExecutiveSummary(
       inspection,
       scoring,
       platformInspections,
       findings
     ),
+    inspectorNotes: buildInspectorNotes(inspection, scoring, findings),
     opportunities: buildOpportunitiesSection(findings),
   };
 

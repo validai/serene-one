@@ -1,4 +1,4 @@
-import { getGradeColors, getGradeLetter } from '../lib/gradeColors';
+import { getGradeColors } from '../lib/gradeColors';
 
 function GradeBadge({ grade, className = '' }) {
   const colors = getGradeColors(grade);
@@ -131,6 +131,17 @@ export default function PrintableReport({ result, onPrint, onNewReport }) {
               </p>
             </div>
 
+            {reportCard.executiveSummary && (
+              <div className="report-card-section report-card-executive-summary">
+                <h2 className="report-card-section-heading">Executive Summary</h2>
+                <div className="report-card-executive-content">
+                  {reportCard.executiveSummary.map((paragraph, i) => (
+                    <p key={i}>{paragraph}</p>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="report-card-section report-card-tables-grid">
               <div>
                 <h2 className="report-card-section-heading">Score Summary</h2>
@@ -189,7 +200,42 @@ export default function PrintableReport({ result, onPrint, onNewReport }) {
               )}
             </div>
 
+            {reportCard.opportunities && (
+              <div className="report-card-section report-card-opportunities">
+                <h2 className="report-card-section-heading report-card-opportunities-title">
+                  Digital Presence Opportunities
+                </h2>
+                <div className="report-card-opportunities-grid">
+                  <OpportunityGroup
+                    title="Visibility Opportunities"
+                    items={reportCard.opportunities.visibilityOpportunities}
+                    accentLetter="B"
+                  />
+                  <OpportunityGroup
+                    title="Trust Opportunities"
+                    items={reportCard.opportunities.trustOpportunities}
+                    accentLetter="A"
+                  />
+                  <OpportunityGroup
+                    title="Growth Opportunities"
+                    items={reportCard.opportunities.growthOpportunities}
+                    accentLetter="C"
+                  />
+                </div>
+              </div>
+            )}
+
             <div className="report-card-section report-card-bottom-compact">
+              <div className="report-card-notes-box">
+                <h3 className="report-card-section-heading report-card-section-heading-sm">
+                  Inspector Notes
+                </h3>
+                <div className="report-card-notes-content">
+                  {reportCard.inspectorNotes.map((note, i) => (
+                    <p key={i}>{note}</p>
+                  ))}
+                </div>
+              </div>
               <div className="report-card-scale-box">
                 <h3 className="report-card-section-heading report-card-section-heading-sm">
                   Grading Scale
@@ -223,42 +269,7 @@ export default function PrintableReport({ result, onPrint, onNewReport }) {
                   })}
                 </ul>
               </div>
-              <div className="report-card-notes-box">
-                <h3 className="report-card-section-heading report-card-section-heading-sm">
-                  Inspector Notes
-                </h3>
-                <div className="report-card-notes-content">
-                  {reportCard.inspectorNotes.map((note, i) => (
-                    <p key={i}>{note}</p>
-                  ))}
-                </div>
-              </div>
             </div>
-
-            {reportCard.opportunities && (
-              <div className="report-card-section report-card-opportunities">
-                <h2 className="report-card-section-heading report-card-opportunities-title">
-                  Digital Presence Opportunities
-                </h2>
-                <div className="report-card-opportunities-grid">
-                  <OpportunityGroup
-                    title="Priority Actions"
-                    items={reportCard.opportunities.priorityActions}
-                    accentLetter="F"
-                  />
-                  <OpportunityGroup
-                    title="Top Recommended Actions"
-                    items={reportCard.opportunities.topRecommendedActions}
-                    accentLetter="B"
-                  />
-                  <OpportunityGroup
-                    title="Opportunity Highlights"
-                    items={reportCard.opportunities.opportunityHighlights}
-                    accentLetter="C"
-                  />
-                </div>
-              </div>
-            )}
 
             <footer className="report-card-footer">
               <p>Prepared by Serene One · Confidential · For client use only</p>

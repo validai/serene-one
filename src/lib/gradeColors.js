@@ -5,9 +5,9 @@
 export const GRADE_SCALE = [
   { letter: 'A', label: 'Excellent', color: 'A' },
   { letter: 'B', label: 'Strong', color: 'B' },
-  { letter: 'C', label: 'Needs Improvement', color: 'C' },
-  { letter: 'D', label: 'Weak', color: 'D' },
-  { letter: 'F', label: 'Urgent Attention', color: 'F' },
+  { letter: 'C', label: 'Developing', color: 'C' },
+  { letter: 'D', label: 'Limited', color: 'D' },
+  { letter: 'F', label: 'Critical', color: 'F' },
 ];
 
 export const GRADE_COLORS = {
@@ -27,19 +27,19 @@ export const GRADE_COLORS = {
     bg: '#fef9c3',
     text: '#854d0e',
     border: '#fde047',
-    label: 'Needs Improvement',
+    label: 'Developing',
   },
   D: {
     bg: '#ffedd5',
     text: '#9a3412',
     border: '#fdba74',
-    label: 'Weak',
+    label: 'Limited',
   },
   F: {
     bg: '#fee2e2',
     text: '#991b1b',
     border: '#fca5a5',
-    label: 'Urgent Attention',
+    label: 'Critical',
   },
 };
 
