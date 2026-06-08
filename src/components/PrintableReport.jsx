@@ -1,7 +1,6 @@
 import { getGradeColors, getGradeLetter } from '../lib/gradeColors';
 
 function GradeBadge({ grade, className = '' }) {
-  const letter = getGradeLetter(grade);
   const colors = getGradeColors(grade);
 
   return (
@@ -30,6 +29,28 @@ function StatusChip({ grade }) {
     >
       {colors.label}
     </span>
+  );
+}
+
+function OpportunityGroup({ title, items, accentLetter }) {
+  const colors = getGradeColors(accentLetter);
+
+  if (items.length === 0) return null;
+
+  return (
+    <div
+      className="report-card-opportunity-group"
+      style={{ borderColor: colors.border, backgroundColor: `${colors.bg}88` }}
+    >
+      <h4 className="report-card-opportunity-group-title" style={{ color: colors.text }}>
+        {title}
+      </h4>
+      <ul className="report-card-opportunity-list">
+        {items.map((item, i) => (
+          <li key={i}>{item.text}</li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
@@ -112,7 +133,7 @@ export default function PrintableReport({ result, onPrint, onNewReport }) {
 
             <div className="report-card-section report-card-tables-grid">
               <div>
-                <h2 className="report-card-table-heading">Score Summary</h2>
+                <h2 className="report-card-section-heading">Score Summary</h2>
                 <table className="report-card-table report-card-table-compact">
                   <thead>
                     <tr>
@@ -141,7 +162,7 @@ export default function PrintableReport({ result, onPrint, onNewReport }) {
 
               {reportCard.platformTable.length > 0 && (
                 <div>
-                  <h2 className="report-card-table-heading">Platform Inspection</h2>
+                  <h2 className="report-card-section-heading">Platform Inspection</h2>
                   <table className="report-card-table report-card-table-compact">
                     <thead>
                       <tr>
@@ -170,14 +191,22 @@ export default function PrintableReport({ result, onPrint, onNewReport }) {
 
             <div className="report-card-section report-card-bottom-compact">
               <div className="report-card-scale-box">
-                <h3 className="report-card-box-heading">Grading Scale</h3>
+                <h3 className="report-card-section-heading report-card-section-heading-sm">
+                  Grading Scale
+                </h3>
                 <ul className="report-card-scale-list">
                   {reportCard.gradingScale.map(({ letter, label }) => {
                     const colors = getGradeColors(letter);
                     return (
-                      <li key={letter}>
+                      <li
+                        key={letter}
+                        style={{
+                          backgroundColor: colors.bg,
+                          borderColor: colors.border,
+                        }}
+                      >
                         <span
-                          className="report-card-scale-letter report-card-scale-badge"
+                          className="report-card-scale-badge"
                           style={{
                             backgroundColor: colors.bg,
                             color: colors.text,
@@ -186,14 +215,18 @@ export default function PrintableReport({ result, onPrint, onNewReport }) {
                         >
                           {letter}
                         </span>
-                        <span>= {label}</span>
+                        <span className="report-card-scale-label" style={{ color: colors.text }}>
+                          {label}
+                        </span>
                       </li>
                     );
                   })}
                 </ul>
               </div>
               <div className="report-card-notes-box">
-                <h3 className="report-card-box-heading">Inspector Notes</h3>
+                <h3 className="report-card-section-heading report-card-section-heading-sm">
+                  Inspector Notes
+                </h3>
                 <div className="report-card-notes-content">
                   {reportCard.inspectorNotes.map((note, i) => (
                     <p key={i}>{note}</p>
@@ -202,17 +235,30 @@ export default function PrintableReport({ result, onPrint, onNewReport }) {
               </div>
             </div>
 
-            <div className="report-card-section report-card-steps-section">
-              <h2 className="report-card-table-heading">Recommended Next Steps</h2>
-              <ul className="report-card-steps-list">
-                {reportCard.recommendedNextSteps.map((step, i) => (
-                  <li key={i}>
-                    <span className="report-card-step-type">{step.type}</span>
-                    {step.text}
-                  </li>
-                ))}
-              </ul>
-            </div>
+            {reportCard.opportunities && (
+              <div className="report-card-section report-card-opportunities">
+                <h2 className="report-card-section-heading report-card-opportunities-title">
+                  Digital Presence Opportunities
+                </h2>
+                <div className="report-card-opportunities-grid">
+                  <OpportunityGroup
+                    title="Priority Actions"
+                    items={reportCard.opportunities.priorityActions}
+                    accentLetter="F"
+                  />
+                  <OpportunityGroup
+                    title="Top Recommended Actions"
+                    items={reportCard.opportunities.topRecommendedActions}
+                    accentLetter="B"
+                  />
+                  <OpportunityGroup
+                    title="Opportunity Highlights"
+                    items={reportCard.opportunities.opportunityHighlights}
+                    accentLetter="C"
+                  />
+                </div>
+              </div>
+            )}
 
             <footer className="report-card-footer">
               <p>Prepared by Serene One · Confidential · For client use only</p>

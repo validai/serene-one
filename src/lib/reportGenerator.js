@@ -138,31 +138,28 @@ function buildInspectorNotes(inspection, scoring, platformInspections, findings)
   return notes.slice(0, 3);
 }
 
-function buildRecommendedNextSteps(findings) {
-  const steps = [];
-
-  findings.critical.slice(0, 2).forEach((finding, i) => {
-    steps.push({
-      text: SHORT_STEP_PHRASES.critical[i] ?? finding.title,
-      type: 'Priority',
-    });
+function buildOpportunitiesSection(findings) {
+  const toAction = (finding, fallback) => ({
+    text: finding?.title ?? fallback,
   });
 
-  findings.easyWins.slice(0, 2).forEach((finding, i) => {
-    steps.push({
-      text: SHORT_STEP_PHRASES.easyWins[i] ?? finding.title,
-      type: 'Quick Win',
-    });
-  });
+  const priorityActions = findings.critical
+    .slice(0, 2)
+    .map((f, i) => toAction(f, SHORT_STEP_PHRASES.critical[i]));
 
-  findings.opportunities.slice(0, 1).forEach((finding, i) => {
-    steps.push({
-      text: SHORT_STEP_PHRASES.opportunities[i] ?? finding.title,
-      type: 'Strategic',
-    });
-  });
+  const topRecommendedActions = findings.easyWins
+    .slice(0, 3)
+    .map((f, i) => toAction(f, SHORT_STEP_PHRASES.easyWins[i]));
 
-  return steps.slice(0, 5);
+  const opportunityHighlights = findings.opportunities
+    .slice(0, 3)
+    .map((f, i) => toAction(f, SHORT_STEP_PHRASES.opportunities[i]));
+
+  return {
+    priorityActions,
+    topRecommendedActions,
+    opportunityHighlights,
+  };
 }
 
 function hasSubmittedEvidence(platformInspections) {
@@ -215,7 +212,7 @@ export function generateReport(inspection, scoring, findings, platformInspection
       platformInspections,
       findings
     ),
-    recommendedNextSteps: buildRecommendedNextSteps(findings),
+    opportunities: buildOpportunitiesSection(findings),
   };
 
   return {

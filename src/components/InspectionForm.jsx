@@ -190,12 +190,8 @@ export default function InspectionForm({ onRunInspection, isRunning }) {
                 disabled={isRunning}
                 className="btn-primary w-full disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {isRunning ? 'Running Grade Inspection…' : 'Run Grade Inspection'}
+                {isRunning ? 'Creating Report Card…' : 'Create Report Card'}
               </button>
-              <p className="helper-text mt-4 text-center">
-                Run Grade Inspection generates a point-in-time report from the evidence
-                submitted above.
-              </p>
             </div>
           </div>
         </form>
