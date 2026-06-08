@@ -1,41 +1,20 @@
 /**
  * Platform analysis engine — produces platformInspection objects from evidence.
  *
- * Current implementation: placeholder analysis per platform type.
+ * Current implementation: deterministic matrix-based placeholder analysis.
  * Future: replace analyzeEvidenceForPlatform() with AI/API vision analysis.
  */
 
 import { scoreToGrade } from './scoringEngine.js';
+import {
+  computePlatformDimensionContributions,
+  ENGINE_VERSION,
+  getPlatformQualityScore,
+} from './scoringMatrix.js';
 import { sortEvidence, stableHash } from './stableHash.js';
 import { logScoringDebug } from './scoringDebug.js';
 
-const ENGINE = 'placeholder-v1';
-
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-
-/**
- * @typedef {Object} PlatformInspection
- * @property {string} id
- * @property {string} platform
- * @property {boolean} evidencePresent
- * @property {string} evidenceSource
- * @property {number} qualityScore
- * @property {string} grade
- * @property {string} status
- * @property {string} priority
- * @property {string[]} observations
- * @property {string[]} strengths
- * @property {string[]} weaknesses
- * @property {string[]} recommendations
- * @property {number} confidence
- * @property {string} engine
- */
-
-// ---------------------------------------------------------------------------
-// Platform placeholder templates
-// ---------------------------------------------------------------------------
+const ENGINE = ENGINE_VERSION;
 
 const PLATFORM_TEMPLATES = {
   'Google Business Profile': {
@@ -54,7 +33,6 @@ const PLATFORM_TEMPLATES = {
       'Confirm hours, services, and photos are complete',
       'Review rating, review count, and local keywords',
     ],
-    scoreProfile: { visibility: 8, trust: 10, seo: 6 },
   },
   Website: {
     observations: [
@@ -72,7 +50,6 @@ const PLATFORM_TEMPLATES = {
       'Verify title tags and meta descriptions are optimized',
       'Ensure mobile layout supports conversion',
     ],
-    scoreProfile: { seo: 10, conversion: 8, trust: 6 },
   },
   Facebook: {
     observations: [
@@ -90,7 +67,6 @@ const PLATFORM_TEMPLATES = {
       'Review recent post activity and engagement',
       'Ensure profile and cover images reflect current branding',
     ],
-    scoreProfile: { trust: 7, content: 8, brandConsistency: 7 },
   },
   Instagram: {
     observations: [
@@ -108,7 +84,6 @@ const PLATFORM_TEMPLATES = {
       'Confirm profile link supports conversion',
       'Review recent content activity',
     ],
-    scoreProfile: { content: 10, brandConsistency: 8, conversion: 6 },
   },
   YouTube: {
     observations: [
@@ -126,7 +101,6 @@ const PLATFORM_TEMPLATES = {
       'Review thumbnail and title consistency',
       'Ensure channel links drive conversion',
     ],
-    scoreProfile: { content: 10, seo: 6, brandConsistency: 6 },
   },
   TikTok: {
     observations: [
@@ -144,7 +118,6 @@ const PLATFORM_TEMPLATES = {
       'Review recent content for brand consistency',
       'Ensure profile link supports lead capture',
     ],
-    scoreProfile: { content: 9, brandConsistency: 7, visibility: 6 },
   },
   LinkedIn: {
     observations: [
@@ -162,7 +135,6 @@ const PLATFORM_TEMPLATES = {
       'Review employee and leadership profile completeness',
       'Maintain consistent professional content activity',
     ],
-    scoreProfile: { trust: 9, brandConsistency: 7, content: 6 },
   },
   Zillow: {
     observations: [
@@ -180,7 +152,6 @@ const PLATFORM_TEMPLATES = {
       'Review listing photography and descriptions',
       'Ensure contact and service area details are accurate',
     ],
-    scoreProfile: { visibility: 8, trust: 9, conversion: 7 },
   },
   'Realtor.com': {
     observations: [
@@ -198,7 +169,6 @@ const PLATFORM_TEMPLATES = {
       'Review client testimonials and ratings',
       'Ensure listings reflect current inventory',
     ],
-    scoreProfile: { visibility: 7, trust: 8, conversion: 7 },
   },
   'Homes.com': {
     observations: [
@@ -216,7 +186,6 @@ const PLATFORM_TEMPLATES = {
       'Review listing photos and descriptions',
       'Ensure service area coverage is clearly stated',
     ],
-    scoreProfile: { visibility: 7, trust: 8, conversion: 6 },
   },
 };
 
@@ -225,7 +194,6 @@ const DEFAULT_TEMPLATE = {
   strengths: ['Evidence available for platform review'],
   weaknesses: ['Platform-specific signals require review'],
   recommendations: ['Continue monitoring and maintain consistent platform presence'],
-  scoreProfile: { visibility: 5, trust: 5, content: 5 },
 };
 
 const GRADE_STATUS = {
@@ -244,13 +212,8 @@ const GRADE_PRIORITY = {
   F: 'High',
 };
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-function generateId(prefix, platform, businessType, source) {
-  const suffix = stableHash(`${platform}|${businessType}|${source}`).toString(36);
-  return `${prefix}_${suffix}`;
+function generateId(platform, businessType) {
+  return `plat_${stableHash(`${platform}|${businessType}`).toString(36)}`;
 }
 
 function gradeLetter(grade) {
@@ -265,60 +228,37 @@ function gradeToPriority(grade) {
   return GRADE_PRIORITY[gradeLetter(grade)] ?? 'Medium';
 }
 
-/**
- * Deterministic platform quality score from stable evidence metadata only.
- * Same platform + business type + source always yields the same score.
- */
-export function stablePlatformScore(platform, businessType, source = '') {
-  const template = getTemplate(platform);
-  const profileBoost = Object.values(template.scoreProfile).reduce((sum, value) => sum + value, 0);
-  const seed = stableHash(`${platform}|${businessType}|${source}`);
-  const base = 58 + (seed % 28);
-  return Math.min(96, Math.round(base + profileBoost * 0.15));
-}
-
-function computeQualityScore(evidence, businessType) {
-  return stablePlatformScore(evidence.platform, businessType, evidence.source);
-}
-
 function getTemplate(platform) {
   return PLATFORM_TEMPLATES[platform] ?? DEFAULT_TEMPLATE;
 }
 
-// ---------------------------------------------------------------------------
-// Public API
-// ---------------------------------------------------------------------------
-
 /**
- * Analyze a single evidence item and produce a platformInspection object.
- *
- * @param {import('../models/inspection.js').Evidence} evidence
- * @param {string} businessType
- * @returns {PlatformInspection}
+ * Deterministic platform quality score from matrix profile only.
  */
+export function stablePlatformScore(platform, businessType) {
+  return getPlatformQualityScore(platform, businessType);
+}
+
 export function analyzeEvidenceForPlatform(evidence, businessType) {
   const template = getTemplate(evidence.platform);
-  const qualityScore = computeQualityScore(evidence, businessType);
+  const qualityScore = stablePlatformScore(evidence.platform, businessType);
   const grade = scoreToGrade(qualityScore);
-  const weights = template.scoreProfile;
-  const dimensionContributions = Object.fromEntries(
-    Object.entries(weights).map(([dimension, weight]) => [
-      dimension,
-      Math.round(qualityScore * weight),
-    ])
+  const dimensionContributions = computePlatformDimensionContributions(
+    evidence.platform,
+    qualityScore
   );
 
-  logScoringDebug('platform', {
+  logScoringDebug({
+    stage: 'platform',
     platform: evidence.platform,
     businessType,
-    source: evidence.source,
     qualityScore,
     grade,
     dimensionContributions,
   });
 
   return {
-    id: generateId('plat', evidence.platform, businessType, evidence.source),
+    id: generateId(evidence.platform, businessType),
     platform: evidence.platform,
     evidencePresent: true,
     evidenceSource: evidence.source,
@@ -330,17 +270,11 @@ export function analyzeEvidenceForPlatform(evidence, businessType) {
     strengths: [...template.strengths],
     weaknesses: [...template.weaknesses],
     recommendations: [...template.recommendations],
-    confidence: 0.65,
+    confidence: 1,
     engine: ENGINE,
   };
 }
 
-/**
- * Analyze all evidence on an inspection — one platformInspection per screenshot.
- *
- * @param {import('../models/inspection.js').Inspection} inspection
- * @returns {PlatformInspection[]}
- */
 export function analyzeAllPlatformEvidence(inspection) {
   const sortedEvidence = sortEvidence(inspection.evidence);
 

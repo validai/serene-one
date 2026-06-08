@@ -1,7 +1,10 @@
 /**
- * Deterministic string hash for stable scoring seeds.
- * Must not use timestamps, random values, or inspection IDs.
+ * Deterministic helpers for stable ordering and IDs.
+ * Must not use timestamps, random values, or inspection IDs in scoring paths.
  */
+
+import { PLATFORMS } from '../models/inspection.js';
+
 export function stableHash(str) {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
@@ -11,16 +14,34 @@ export function stableHash(str) {
   return Math.abs(hash);
 }
 
+export function sortPlatformsByCanonical(platforms) {
+  const platformSet = new Set(platforms);
+  return PLATFORMS.filter((platform) => platformSet.has(platform));
+}
+
+/** @deprecated Use sortPlatformsByCanonical */
 export function sortPlatforms(platforms) {
-  return [...platforms].sort((a, b) => a.localeCompare(b));
+  return sortPlatformsByCanonical(platforms);
+}
+
+export function normalizePlatformSource(platform) {
+  return `${platform.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-evidence`;
 }
 
 export function sortEvidence(evidence) {
+  const order = new Map(PLATFORMS.map((platform, index) => [platform, index]));
+
   return [...evidence].sort((a, b) => {
-    const platformCompare = a.platform.localeCompare(b.platform);
+    const platformCompare = (order.get(a.platform) ?? 999) - (order.get(b.platform) ?? 999);
     if (platformCompare !== 0) return platformCompare;
-    const sourceCompare = (a.source || '').localeCompare(b.source || '');
-    if (sourceCompare !== 0) return sourceCompare;
     return (a.type || '').localeCompare(b.type || '');
   });
+}
+
+export function sortPlatformInspections(platformInspections) {
+  const order = new Map(PLATFORMS.map((platform, index) => [platform, index]));
+
+  return [...platformInspections].sort(
+    (a, b) => (order.get(a.platform) ?? 999) - (order.get(b.platform) ?? 999)
+  );
 }

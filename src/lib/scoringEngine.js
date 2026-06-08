@@ -1,17 +1,17 @@
 /**
- * Scoring engine — evaluates platform inspections and produces dimension scores.
- *
- * Current implementation: aggregates placeholder platform quality scores.
- * Future: replace scoreInspection() body with API/AI calls without changing the interface.
+ * Scoring engine — deterministic matrix-based grading.
  */
 
-import { SCORE_DIMENSIONS } from '../models/inspection.js';
-import { sortPlatforms, stableHash } from './stableHash.js';
+import { SCORE_DIMENSIONS as MATRIX_SCORE_DIMENSIONS } from './scoringMatrix.js';
+import {
+  ENGINE_VERSION,
+  applyBusinessTypeDimensionModifiers,
+  computeEvidenceConfidence,
+  computePlatformDimensionContributions,
+  getPlatformDimensionWeights,
+} from './scoringMatrix.js';
+import { sortPlatformsByCanonical, sortPlatformInspections } from './stableHash.js';
 import { logScoringDebug } from './scoringDebug.js';
-
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
 
 /**
  * @typedef {Object} ScoreMap
@@ -24,209 +24,159 @@ import { logScoringDebug } from './scoringDebug.js';
  */
 
 /**
+ * @typedef {Object} GradeExplanation
+ * @property {string} engineVersion
+ * @property {string} businessType
+ * @property {string[]} submittedPlatforms
+ * @property {ScoreMap} dimensionScores
+ * @property {Object[]} platformContributions
+ * @property {string} gradeReason
+ * @property {string} scoreReason
+ */
+
+/**
  * @typedef {Object} ScoringResult
  * @property {ScoreMap} scores
  * @property {number} overallScore
  * @property {string} overallGrade
+ * @property {GradeExplanation} gradeExplanation
+ * @property {{ level: string, score: number, reason: string }} confidence
  * @property {string} engine
  * @property {string} scoredAt
  */
 
-// ---------------------------------------------------------------------------
-// Grade conversion
-// ---------------------------------------------------------------------------
-
 export function scoreToGrade(score) {
-  if (score >= 97) return 'A+';
-  if (score >= 93) return 'A';
-  if (score >= 90) return 'A-';
-  if (score >= 87) return 'B+';
-  if (score >= 83) return 'B';
-  if (score >= 80) return 'B-';
-  if (score >= 77) return 'C+';
-  if (score >= 73) return 'C';
-  if (score >= 70) return 'C-';
-  if (score >= 67) return 'D+';
-  if (score >= 63) return 'D';
-  if (score >= 60) return 'D-';
+  if (score >= 90) return 'A';
+  if (score >= 80) return 'B';
+  if (score >= 70) return 'C';
+  if (score >= 60) return 'D';
   return 'F';
 }
-
-// ---------------------------------------------------------------------------
-// Platform → dimension weight maps (replaceable with AI output)
-// ---------------------------------------------------------------------------
-
-const PLATFORM_DIMENSION_WEIGHTS = {
-  'Google Business Profile': { visibility: 0.35, trust: 0.35, seo: 0.3 },
-  Website: { seo: 0.35, conversion: 0.35, trust: 0.3 },
-  Facebook: { trust: 0.3, content: 0.35, brandConsistency: 0.35 },
-  Instagram: { content: 0.4, brandConsistency: 0.35, conversion: 0.25 },
-  YouTube: { content: 0.45, seo: 0.3, brandConsistency: 0.25 },
-  TikTok: { content: 0.4, brandConsistency: 0.3, visibility: 0.3 },
-  LinkedIn: { trust: 0.4, brandConsistency: 0.3, content: 0.3 },
-  Zillow: { visibility: 0.35, trust: 0.35, conversion: 0.3 },
-  'Realtor.com': { visibility: 0.3, trust: 0.35, conversion: 0.35 },
-  'Homes.com': { visibility: 0.3, trust: 0.35, conversion: 0.35 },
-};
-
-const DEFAULT_WEIGHTS = {
-  visibility: 0.2,
-  trust: 0.2,
-  seo: 0.15,
-  content: 0.15,
-  conversion: 0.15,
-  brandConsistency: 0.15,
-};
-
-const BUSINESS_TYPE_MODIFIERS = {
-  'Local Business': { visibility: 3, trust: 2, seo: 1 },
-  Restaurant: { visibility: 4, trust: 3, content: 2 },
-  Realtor: { visibility: 3, trust: 4, conversion: 2 },
-  'Service Business': { visibility: 2, trust: 2, conversion: 2 },
-  'Creator / Artist': { content: 4, brandConsistency: 3, visibility: 1 },
-};
 
 function clamp(value, min = 0, max = 100) {
   return Math.min(max, Math.max(min, value));
 }
 
-function generateBaselineScores(businessType, platforms) {
-  const platformKey = sortPlatforms(platforms).join('|') || 'none';
-  const seed = stableHash(`${businessType}|${platformKey}`);
-
-  const rand = (offset) => 50 + ((seed + offset * 13) % 20);
-
-  return {
-    visibility: rand(1),
-    trust: rand(2),
-    seo: rand(3),
-    content: rand(4),
-    conversion: rand(5),
-    brandConsistency: rand(6),
-  };
-}
-
 function createEmptyScores() {
-  return Object.fromEntries(SCORE_DIMENSIONS.map((dim) => [dim, 0]));
+  return Object.fromEntries(MATRIX_SCORE_DIMENSIONS.map((dimension) => [dimension, 0]));
 }
 
-function createScoreCounts() {
-  return Object.fromEntries(SCORE_DIMENSIONS.map((dim) => [dim, 0]));
-}
-
-function getPlatformWeights(platform) {
-  return PLATFORM_DIMENSION_WEIGHTS[platform] ?? DEFAULT_WEIGHTS;
-}
-
-function sortPlatformInspections(platformInspections) {
-  return [...platformInspections].sort((a, b) => a.platform.localeCompare(b.platform));
-}
-
-function applyBusinessTypeModifiers(scores, businessType) {
-  const modifiers = BUSINESS_TYPE_MODIFIERS[businessType] || {};
-  const adjusted = { ...scores };
-
-  for (const [key, bonus] of Object.entries(modifiers)) {
-    if (adjusted[key] !== undefined) {
-      adjusted[key] = clamp(adjusted[key] + bonus);
-    }
-  }
-
-  return adjusted;
-}
-
-function aggregateScoresFromPlatformInspections(platformInspections) {
+function aggregateDimensionScores(platformInspections) {
   const totals = createEmptyScores();
-  const counts = createScoreCounts();
+  const weightTotals = createEmptyScores();
 
   for (const inspection of sortPlatformInspections(platformInspections)) {
-    const weights = getPlatformWeights(inspection.platform);
+    const platformWeights = getPlatformDimensionWeights(inspection.platform);
     const { qualityScore } = inspection;
 
-    for (const [dimension, weight] of Object.entries(weights)) {
-      if (totals[dimension] !== undefined) {
-        totals[dimension] += qualityScore * weight;
-        counts[dimension] += weight;
-      }
+    for (const dimension of MATRIX_SCORE_DIMENSIONS) {
+      const weight = platformWeights[dimension] ?? 0;
+      if (weight <= 0) continue;
+      totals[dimension] += qualityScore * (weight / 100);
+      weightTotals[dimension] += weight / 100;
     }
   }
 
   const scores = createEmptyScores();
-  for (const dim of SCORE_DIMENSIONS) {
-    scores[dim] = counts[dim] > 0 ? Math.round(totals[dim] / counts[dim]) : 0;
+  for (const dimension of MATRIX_SCORE_DIMENSIONS) {
+    scores[dimension] =
+      weightTotals[dimension] > 0
+        ? Math.round(totals[dimension] / weightTotals[dimension])
+        : 0;
   }
 
   return scores;
 }
 
-function mergeWithBaseline(platformScores, baseline) {
-  const merged = createEmptyScores();
-
-  for (const dim of SCORE_DIMENSIONS) {
-    if (platformScores[dim] > 0) {
-      merged[dim] = clamp(Math.round(platformScores[dim] * 0.75 + baseline[dim] * 0.25));
-    } else {
-      merged[dim] = baseline[dim];
-    }
-  }
-
-  return merged;
-}
-
 function computeOverallScore(scores) {
-  const values = SCORE_DIMENSIONS.map((dim) => scores[dim]);
-  return Math.round(values.reduce((sum, val) => sum + val, 0) / values.length);
+  const values = MATRIX_SCORE_DIMENSIONS.map((dimension) => scores[dimension]);
+  return Math.round(values.reduce((sum, value) => sum + value, 0) / values.length);
 }
 
-// ---------------------------------------------------------------------------
-// Public API
-// ---------------------------------------------------------------------------
+function buildGradeReason(overallScore, overallGrade) {
+  return `Overall score of ${overallScore} maps to grade ${overallGrade} using scoring-matrix-v1 bands (A: 90+, B: 80-89, C: 70-79, D: 60-69, F: below 60).`;
+}
+
+function buildScoreReason(scores) {
+  const ranked = MATRIX_SCORE_DIMENSIONS.map((dimension) => ({
+    dimension,
+    score: scores[dimension],
+  })).sort((a, b) => a.score - b.score);
+
+  const weakest = ranked.slice(0, 2).map((item) => `${item.dimension} (${item.score})`);
+  const strongest = ranked[ranked.length - 1];
+
+  return `Strongest dimension: ${strongest.dimension} (${strongest.score}). Weakest dimensions: ${weakest.join(', ')}.`;
+}
+
+function buildPlatformContributions(platformInspections) {
+  return sortPlatformInspections(platformInspections).map((inspection) => ({
+    platform: inspection.platform,
+    qualityScore: inspection.qualityScore,
+    grade: inspection.grade,
+    weights: getPlatformDimensionWeights(inspection.platform),
+    dimensionContributions: computePlatformDimensionContributions(
+      inspection.platform,
+      inspection.qualityScore
+    ),
+  }));
+}
 
 /**
- * Score an inspection using platform inspection analysis results.
- *
  * @param {import('../models/inspection.js').Inspection} inspection
  * @param {import('./platformAnalysisEngine.js').PlatformInspection[]} platformInspections
  * @returns {ScoringResult}
  */
 export function scoreInspection(inspection, platformInspections = []) {
   const { businessType, evidence } = inspection;
-  const inspectedPlatforms = [...new Set(evidence.map((item) => item.platform))];
-  const baseline = applyBusinessTypeModifiers(
-    generateBaselineScores(businessType, inspectedPlatforms),
-    businessType
-  );
+  const submittedPlatforms = sortPlatformsByCanonical([
+    ...new Set(evidence.map((item) => item.platform)),
+  ]);
 
-  let scores;
+  let scores = createEmptyScores();
 
-  if (platformInspections.length === 0) {
-    scores = baseline;
-  } else {
-    const platformScores = aggregateScoresFromPlatformInspections(platformInspections);
-    scores = mergeWithBaseline(platformScores, baseline);
+  if (platformInspections.length > 0) {
+    scores = aggregateDimensionScores(platformInspections);
+    scores = applyBusinessTypeDimensionModifiers(scores, businessType);
   }
 
-  const overallScore = computeOverallScore(scores);
-  const overallGrade = scoreToGrade(overallScore);
+  const overallScore = platformInspections.length > 0 ? computeOverallScore(scores) : 0;
+  const overallGrade = platformInspections.length > 0 ? scoreToGrade(overallScore) : 'F';
+  const confidence = computeEvidenceConfidence(submittedPlatforms.length);
+  const platformContributions = buildPlatformContributions(platformInspections);
 
-  logScoringDebug('final', {
+  const gradeExplanation = {
+    engineVersion: ENGINE_VERSION,
     businessType,
-    platforms: sortPlatforms(inspectedPlatforms),
-    dimensionScores: scores,
-    overallScore,
-    overallGrade,
-    platformGrades: sortPlatformInspections(platformInspections).map((item) => ({
+    submittedPlatforms,
+    dimensionScores: { ...scores },
+    platformContributions,
+    gradeReason: buildGradeReason(overallScore, overallGrade),
+    scoreReason: buildScoreReason(scores),
+  };
+
+  logScoringDebug({
+    engineVersion: ENGINE_VERSION,
+    businessType,
+    submittedPlatforms,
+    platformScores: platformContributions.map((item) => ({
       platform: item.platform,
       qualityScore: item.qualityScore,
       grade: item.grade,
     })),
+    dimensionScores: scores,
+    finalScore: overallScore,
+    grade: overallGrade,
+    confidence,
   });
 
   return {
     scores,
     overallScore,
     overallGrade,
-    engine: platformInspections.length > 0 ? 'platform-analysis-v1' : 'baseline-v1',
+    gradeExplanation,
+    confidence,
+    engine: ENGINE_VERSION,
     scoredAt: new Date().toISOString(),
   };
 }

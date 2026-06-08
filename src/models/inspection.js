@@ -13,7 +13,7 @@ import { analyzeAllPlatformEvidence } from '../lib/platformAnalysisEngine.js';
 import { scoreInspection } from '../lib/scoringEngine.js';
 import { generateFindings } from '../lib/findingsEngine.js';
 import { generateReport } from '../lib/reportGenerator.js';
-import { sortEvidence } from '../lib/stableHash.js';
+import { sortEvidence, normalizePlatformSource, sortPlatformsByCanonical, stableHash } from '../lib/stableHash.js';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -67,8 +67,8 @@ export const SCORE_DIMENSIONS = [
 // ID helpers
 // ---------------------------------------------------------------------------
 
-function generateId(prefix) {
-  return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+function generateId(prefix, seed) {
+  return `${prefix}_${stableHash(seed).toString(36)}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -106,7 +106,7 @@ export function createEvidence({
   if (!source) throw new Error('Evidence requires a source');
 
   return {
-    id: generateId('ev'),
+    id: generateId('ev', `${platform}|${type}|${source}`),
     platform,
     type,
     source,
@@ -126,8 +126,8 @@ export function createEvidenceFromUpload(platform, file) {
   return createEvidence({
     platform,
     type: EVIDENCE_TYPE.SCREENSHOT,
-    source: file.name,
-    metadata: { mimeType: file.type, size: file.size },
+    source: normalizePlatformSource(platform),
+    metadata: { mimeType: file.type, size: file.size, originalName: file.name },
   });
 }
 
@@ -164,7 +164,7 @@ export function createInspection({
   const name = businessName?.trim() || 'Your Business';
 
   return {
-    id: generateId('insp'),
+    id: generateId('insp', `${name}|${businessType}|${evidence.map((e) => e.platform).join('|')}`),
     businessName: name,
     businessType: businessType || 'Local Business',
     evidence,
@@ -196,7 +196,7 @@ export function addEvidence(inspection, evidence) {
  * @returns {string[]}
  */
 export function getInspectedPlatforms(inspection) {
-  return [...new Set(inspection.evidence.map((e) => e.platform))];
+  return sortPlatformsByCanonical([...new Set(inspection.evidence.map((e) => e.platform))]);
 }
 
 /**
@@ -223,7 +223,7 @@ export function createInspectionFromFormInput({
           createEvidence({
             platform,
             type: EVIDENCE_TYPE.SCREENSHOT,
-            source: `${platform.toLowerCase().replace(/\s+/g, '-')}-screenshot.png`,
+            source: normalizePlatformSource(platform),
           })
         );
 

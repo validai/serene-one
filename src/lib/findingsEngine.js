@@ -5,10 +5,10 @@
  * Future: replace generateFindings() body with AI analysis without changing the interface.
  */
 
-import { sortPlatforms, stableHash } from './stableHash.js';
+import { sortPlatformsByCanonical, stableHash } from './stableHash.js';
 
 function getInspectedPlatforms(inspection) {
-  return sortPlatforms([...new Set(inspection.evidence.map((e) => e.platform))]);
+  return sortPlatformsByCanonical([...new Set(inspection.evidence.map((e) => e.platform))]);
 }
 
 // ---------------------------------------------------------------------------

@@ -4,6 +4,7 @@
 
 import { scoreToGrade } from './scoringEngine.js';
 import { getGradeLetter, getGradeStatusLabel, GRADE_SCALE } from './gradeColors.js';
+import { sortPlatformInspections, sortPlatformsByCanonical, stableHash } from './stableHash.js';
 
 const GRADING_CATEGORIES = [
   { key: 'visibility', label: 'Visibility' },
@@ -59,10 +60,14 @@ const OPPORTUNITY_FALLBACKS = {
   ],
 };
 
-function generateReferenceId() {
-  const year = new Date().getFullYear();
-  const sequence = String(Math.floor(Math.random() * 9000) + 1000);
-  return `S1-${year}-${sequence}`;
+function generateReferenceId(inspection, scoring) {
+  const platforms = sortPlatformsByCanonical(
+    inspection.evidence.map((item) => item.platform)
+  ).join('|');
+  const hash = stableHash(
+    `${inspection.businessType}|${platforms}|${scoring.overallScore}|${scoring.overallGrade}`
+  );
+  return `S1-${String((hash % 9000) + 1000)}`;
 }
 
 function formatInspectionDate(date = new Date()) {
@@ -102,7 +107,7 @@ function buildGradingRows(scores) {
 }
 
 function buildPlatformRows(platformInspections) {
-  return platformInspections.map((inspection) => ({
+  return sortPlatformInspections(platformInspections).map((inspection) => ({
     platform: inspection.platform,
     grade: inspection.grade,
     gradeLetter: getGradeLetter(inspection.grade),
@@ -127,29 +132,48 @@ function getScoreExtremes(scores) {
   };
 }
 
+function buildConfidenceNote(confidence) {
+  if (confidence.level === 'Low' || confidence.level === 'Medium') {
+    return 'This report is based on limited submitted evidence.';
+  }
+  return null;
+}
+
 function buildExecutiveSummary(inspection, scoring, platformInspections, findings) {
   const { businessName, businessType } = inspection;
   const status = getGradeStatusLabel(scoring.overallGrade);
   const count = platformInspections.length;
-  const platforms = platformInspections.map((pi) => pi.platform).join(', ');
+  const platforms = sortPlatformInspections(platformInspections)
+    .map((pi) => pi.platform)
+    .join(', ');
   const { strongest, weakest } = getScoreExtremes(scoring.scores);
   const businessContext = businessType.toLowerCase();
+  const confidenceNote = buildConfidenceNote(scoring.confidence);
 
   const priorityClause =
     findings.critical.length > 0
       ? `Near-term priority should be ${findings.critical[0].title.toLowerCase()}, which carries the highest impact on discovery and buyer confidence.`
-      : 'Current evidence indicates a stable foundation with room to sharpen consistency and engagement across channels.';
+      : getGradeLetter(scoring.overallGrade) === 'A' || getGradeLetter(scoring.overallGrade) === 'B'
+        ? 'Current evidence indicates a credible foundation with room to sharpen consistency and engagement across channels.'
+        : 'Current evidence indicates meaningful improvement opportunities across inspected channels.';
 
-  return [
+  const paragraphs = [
     `This assessment evaluates ${businessName}'s digital presence across ${count} active platform${count !== 1 ? 's' : ''} (${platforms}). The business earns an overall ${status} rating (${scoring.overallScore}/100), reflecting how discoverable, credible, and conversion-ready the brand appears to prospective clients in a ${businessContext} market.`,
     `${strongest.label} is the strongest performance area in this review; ${weakest.label} represents the most immediate lever for measurable improvement. ${priorityClause}`,
     `The opportunities outlined below are sequenced by strategic impact—visibility, trust, and growth—aligned with how customers evaluate and select ${businessContext} providers online.`,
   ];
+
+  if (confidenceNote) {
+    paragraphs.push(confidenceNote);
+  }
+
+  return paragraphs;
 }
 
 function buildInspectorNotes(inspection, scoring, findings) {
   const { businessName } = inspection;
   const status = getGradeStatusLabel(scoring.overallGrade).toLowerCase();
+  const gradeLetter = getGradeLetter(scoring.overallGrade);
   const lowScoreAreas = GRADING_CATEGORIES.filter(
     ({ key }) => scoring.scores[key] < 75
   ).map(({ label }) => label.toLowerCase());
@@ -162,9 +186,13 @@ function buildInspectorNotes(inspection, scoring, findings) {
     notes.push(
       `Material gaps were observed in ${lowScoreAreas.slice(0, 3).join(', ')}—dimensions that shape discovery, credibility, and conversion. These can be addressed through focused profile updates, review generation, and clearer calls-to-action rather than a full-channel rebuild.`
     );
+  } else if (gradeLetter === 'A' || gradeLetter === 'B') {
+    notes.push(
+      'Core profiles demonstrate credible alignment across inspected channels. Continued investment in fresh content, review velocity, and cross-linking will help sustain momentum against competitors active in the same local market.',
+    );
   } else {
     notes.push(
-      'Core profiles demonstrate solid alignment across inspected channels. Continued investment in fresh content, review velocity, and cross-linking will help sustain momentum against competitors active in the same local market.',
+      'Inspected profiles show partial alignment across channels. Targeted updates to messaging, imagery, and conversion paths should improve consistency without requiring a full rebuild.',
     );
   }
 
@@ -248,7 +276,7 @@ export function generateReport(inspection, scoring, findings, platformInspection
       title: 'Digital Presence Report Card',
       inspectedAt: formatInspectionDate(),
       generatedAt: new Date().toISOString(),
-      engine: 'mock-v1',
+      engine: 'scoring-matrix-v1',
     };
   }
 
@@ -265,7 +293,7 @@ export function generateReport(inspection, scoring, findings, platformInspection
       inspectionDate: formatInspectionDate(
         new Date(inspection.completedAt ?? Date.now())
       ),
-      inspectionId: generateReferenceId(),
+      inspectionId: generateReferenceId(inspection, scoring),
     },
     gradingTable: buildGradingRows(scoring.scores),
     platformTable: buildPlatformRows(platformInspections),
@@ -277,6 +305,7 @@ export function generateReport(inspection, scoring, findings, platformInspection
       label: 'Overall Digital Presence Grade',
       status: getGradeStatusLabel(scoring.overallGrade),
     },
+    confidence: scoring.confidence,
     executiveSummary: buildExecutiveSummary(
       inspection,
       scoring,
@@ -304,6 +333,8 @@ export function generateReport(inspection, scoring, findings, platformInspection
       overallGrade: scoring.overallGrade,
       overallScore: scoring.overallScore,
       scores: { ...scoring.scores },
+      confidence: scoring.confidence,
+      gradeExplanation: scoring.gradeExplanation,
     },
     findings: {
       critical: findings.critical,
@@ -313,7 +344,7 @@ export function generateReport(inspection, scoring, findings, platformInspection
     recommendations: findings.recommendations,
     disclaimer:
       'Prepared by Serene One · Point-in-time assessment · Confidential',
-    engine: 'mock-v1',
+    engine: 'scoring-matrix-v1',
   };
 }
 
