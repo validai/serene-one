@@ -62,12 +62,12 @@ export default function InspectionForm({ onRunInspection, isRunning }) {
         </div>
 
         <form onSubmit={handleSubmit} className="mt-14 sm:mt-16 lg:mt-20">
-          <div className="border border-serene-200 bg-white">
-            <div className="border-b border-serene-100 bg-serene-50 px-6 py-4 sm:px-8">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-serene-400">
+          <div className="border border-serene-border bg-white">
+            <div className="border-b border-serene-border bg-serene-blue-soft/40 px-6 py-4 sm:px-8">
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-serene-blue">
                 Inspection Intake Form
               </p>
-              <p className="mt-1 text-xs text-serene-500">
+              <p className="mt-1 text-sm text-serene-slate">
                 All fields required for a complete assessment
               </p>
             </div>
@@ -76,7 +76,7 @@ export default function InspectionForm({ onRunInspection, isRunning }) {
               <div>
                 <label
                   htmlFor="businessName"
-                  className="mb-3 block text-[11px] font-semibold uppercase tracking-wider text-serene-500"
+                  className="mb-3 block text-xs font-semibold uppercase tracking-wider text-serene-slate"
                 >
                   Business Name
                 </label>
@@ -86,7 +86,7 @@ export default function InspectionForm({ onRunInspection, isRunning }) {
                   value={businessName}
                   onChange={(e) => setBusinessName(e.target.value)}
                   placeholder="Legal or trade name of the subject business"
-                  className="w-full border border-serene-200 px-4 py-3.5 text-sm text-serene-900 placeholder:text-serene-400 focus:border-serene-700 focus:outline-none focus:ring-1 focus:ring-serene-700/20"
+                  className="w-full border border-serene-border px-4 py-3.5 text-sm text-serene-navy placeholder:text-serene-muted focus:border-serene-blue focus:outline-none focus:ring-2 focus:ring-serene-blue/20"
                   required
                 />
               </div>
@@ -94,7 +94,7 @@ export default function InspectionForm({ onRunInspection, isRunning }) {
               <div>
                 <label
                   htmlFor="businessType"
-                  className="mb-3 block text-[11px] font-semibold uppercase tracking-wider text-serene-500"
+                  className="mb-3 block text-xs font-semibold uppercase tracking-wider text-serene-slate"
                 >
                   Business Classification
                 </label>
@@ -102,7 +102,7 @@ export default function InspectionForm({ onRunInspection, isRunning }) {
                   id="businessType"
                   value={businessType}
                   onChange={(e) => setBusinessType(e.target.value)}
-                  className="w-full border border-serene-200 bg-white px-4 py-3.5 text-sm text-serene-900 focus:border-serene-700 focus:outline-none focus:ring-1 focus:ring-serene-700/20"
+                  className="w-full border border-serene-border bg-white px-4 py-3.5 text-sm text-serene-navy focus:border-serene-blue focus:outline-none focus:ring-2 focus:ring-serene-blue/20"
                 >
                   {BUSINESS_TYPES.map((type) => (
                     <option key={type} value={type}>
@@ -115,17 +115,17 @@ export default function InspectionForm({ onRunInspection, isRunning }) {
               <div>
                 <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                   <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-wider text-serene-500">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-serene-slate">
                       Inspection Evidence
                     </p>
-                    <p className="mt-2 max-w-lg text-sm leading-relaxed text-serene-500">
+                    <p className="mt-2 max-w-lg text-sm leading-relaxed text-serene-slate">
                       Upload screenshots of each platform profile to be reviewed. Evidence
                       supports accurate grading across visibility, trust, and consistency
                       indicators.
                     </p>
                   </div>
                   {evidenceCount > 0 && (
-                    <p className="shrink-0 text-xs font-medium text-serene-600">
+                    <p className="shrink-0 text-sm font-medium text-serene-slate">
                       {evidenceCount} file{evidenceCount !== 1 ? 's' : ''} submitted
                     </p>
                   )}
@@ -143,13 +143,13 @@ export default function InspectionForm({ onRunInspection, isRunning }) {
                       onDrop={(e) => handleDrop(platform, e)}
                       className={`border p-4 transition-colors sm:p-5 ${
                         dragOver === platform
-                          ? 'border-serene-700 bg-serene-50'
+                          ? 'border-serene-blue bg-serene-blue-soft'
                           : uploads[platform]
-                            ? 'border-serene-300 bg-serene-50/60'
-                            : 'border-dashed border-serene-200 bg-white hover:border-serene-300'
+                            ? 'border-serene-blue/40 bg-serene-blue-soft/50'
+                            : 'border-dashed border-serene-border bg-white hover:border-serene-blue/50'
                       }`}
                     >
-                      <p className="text-xs font-medium text-serene-800">{platform}</p>
+                      <p className="text-sm font-medium text-serene-navy">{platform}</p>
                       {uploads[platform] ? (
                         <div className="mt-3 flex items-center gap-3">
                           <img
@@ -157,20 +157,20 @@ export default function InspectionForm({ onRunInspection, isRunning }) {
                             alt={platform}
                             className="h-11 w-11 border border-serene-200 object-cover"
                           />
-                          <span className="flex-1 truncate text-xs text-serene-600">
+                          <span className="flex-1 truncate text-sm text-serene-slate">
                             Evidence on file
                           </span>
                           <button
                             type="button"
                             onClick={() => removeUpload(platform)}
-                            className="text-xs text-serene-400 underline-offset-2 hover:text-serene-700 hover:underline"
+                            className="text-sm text-serene-muted underline-offset-2 hover:text-serene-blue hover:underline"
                           >
                             Remove
                           </button>
                         </div>
                       ) : (
                         <label className="mt-3 block cursor-pointer">
-                          <span className="text-xs text-serene-400">
+                          <span className="text-sm text-serene-muted">
                             Drop screenshot or click to attach
                           </span>
                           <input
@@ -187,16 +187,17 @@ export default function InspectionForm({ onRunInspection, isRunning }) {
               </div>
             </div>
 
-            <div className="border-t border-serene-100 px-6 py-6 sm:px-8 sm:py-8">
+            <div className="border-t border-serene-border px-6 py-6 sm:px-8 sm:py-8">
               <button
                 type="submit"
                 disabled={isRunning}
                 className="btn-primary w-full disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {isRunning ? 'Conducting Inspection…' : 'Run Grade Inspection'}
+                {isRunning ? 'Running Grade Inspection…' : 'Run Grade Inspection'}
               </button>
-              <p className="mt-4 text-center text-[11px] text-serene-400">
-                Results generated via Serene One inspection methodology · Not a live audit
+              <p className="helper-text mt-4 text-center">
+                Run Grade Inspection generates a point-in-time report from the evidence
+                submitted above.
               </p>
             </div>
           </div>

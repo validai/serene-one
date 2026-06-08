@@ -86,16 +86,16 @@ function App() {
         {result && <PrintableReport result={result} onPrint={handlePrint} />}
         <InspectionHistory refreshKey={historyVersion} onLoadReport={handleLoadReport} />
       </main>
-      <footer className="no-print border-t border-serene-100 py-12 sm:py-16">
+      <footer className="no-print border-t border-serene-border py-12 sm:py-16">
         <div className="section-container">
           <div className="flex flex-col items-center gap-6 text-center sm:flex-row sm:justify-between sm:text-left">
             <div>
-              <p className="font-serif text-base font-medium text-serene-900">Serene One</p>
-              <p className="mt-1 text-xs text-serene-400">
+              <p className="font-serif text-base font-medium text-serene-navy">Serene One</p>
+              <p className="mt-1 text-sm text-serene-muted">
                 Platform Health Inspection Services
               </p>
             </div>
-            <div className="text-xs leading-relaxed text-serene-400">
+            <div className="text-sm leading-relaxed text-serene-muted">
               <p>Independent digital presence assessments</p>
               <p className="mt-1">Point-in-time · Client-ready deliverables</p>
             </div>

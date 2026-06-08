@@ -38,7 +38,7 @@ export default function ResultsGrid({ result }) {
           </div>
 
           <div className="lg:col-span-3">
-            <p className="mb-6 text-[11px] font-semibold uppercase tracking-wider text-serene-400">
+            <p className="mb-6 text-xs font-semibold uppercase tracking-wider text-serene-blue">
               Detailed Score Indices
             </p>
             <div className="grid gap-4 sm:grid-cols-2">
@@ -47,16 +47,16 @@ export default function ResultsGrid({ result }) {
                 return (
                   <div
                     key={key}
-                    className="border border-serene-100 bg-white px-5 py-6 sm:px-6"
+                    className="border border-serene-border bg-white px-5 py-6 sm:px-6"
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div>
-                        <p className="text-sm font-medium text-serene-900">{label}</p>
-                        <p className="mt-1.5 text-xs leading-relaxed text-serene-400">
+                        <p className="text-sm font-medium text-serene-navy">{label}</p>
+                        <p className="mt-1.5 text-sm leading-relaxed text-serene-muted">
                           {description}
                         </p>
                       </div>
-                      <span className="shrink-0 font-serif text-2xl font-medium tabular-nums text-serene-900">
+                      <span className="shrink-0 font-serif text-2xl font-medium tabular-nums text-serene-navy">
                         {score}
                       </span>
                     </div>

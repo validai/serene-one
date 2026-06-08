@@ -11,59 +11,59 @@ export default function InspectionHistory({ onLoadReport, refreshKey = 0 }) {
   if (history.length === 0) return null;
 
   return (
-    <section className="no-print border-t border-serene-100 py-16 sm:py-20">
+    <section className="no-print border-t border-serene-border py-16 sm:py-20">
       <div className="section-container">
         <div className="max-w-2xl">
           <p className="section-label">Inspection Archive</p>
-          <h2 className="section-title mt-4">Previous Inspections</h2>
+          <h2 className="section-title mt-4">Saved Inspection Reports</h2>
           <p className="section-subtitle">
-            Recently completed inspections saved on this device.
+            Previously completed inspections saved on this device.
           </p>
         </div>
 
         <div className="mt-10 overflow-x-auto">
           <table className="w-full min-w-[640px] border-collapse text-sm">
             <thead>
-              <tr className="border-b border-serene-200 text-left">
-                <th className="pb-3 pr-4 text-[11px] font-semibold uppercase tracking-wider text-serene-400">
+              <tr className="border-b border-serene-border text-left">
+                <th className="pb-3 pr-4 text-xs font-semibold uppercase tracking-wider text-serene-slate">
                   Inspection ID
                 </th>
-                <th className="pb-3 pr-4 text-[11px] font-semibold uppercase tracking-wider text-serene-400">
-                  Business Name
+                <th className="pb-3 pr-4 text-xs font-semibold uppercase tracking-wider text-serene-slate">
+                  Business
                 </th>
-                <th className="pb-3 pr-4 text-[11px] font-semibold uppercase tracking-wider text-serene-400">
-                  Business Type
+                <th className="pb-3 pr-4 text-xs font-semibold uppercase tracking-wider text-serene-slate">
+                  Type
                 </th>
-                <th className="pb-3 pr-4 text-[11px] font-semibold uppercase tracking-wider text-serene-400">
+                <th className="pb-3 pr-4 text-xs font-semibold uppercase tracking-wider text-serene-slate">
                   Date
                 </th>
-                <th className="pb-3 pr-4 text-[11px] font-semibold uppercase tracking-wider text-serene-400">
+                <th className="pb-3 pr-4 text-xs font-semibold uppercase tracking-wider text-serene-slate">
                   Grade
                 </th>
-                <th className="pb-3 text-[11px] font-semibold uppercase tracking-wider text-serene-400">
+                <th className="pb-3 text-xs font-semibold uppercase tracking-wider text-serene-slate">
                   Action
                 </th>
               </tr>
             </thead>
             <tbody>
               {history.map((entry) => (
-                <tr key={entry.id} className="border-b border-serene-100">
-                  <td className="py-4 pr-4 font-mono text-xs text-serene-600">
+                <tr key={entry.id} className="border-b border-serene-border">
+                  <td className="py-4 pr-4 font-mono text-xs text-serene-slate">
                     {entry.referenceId ?? entry.id.slice(0, 12)}
                   </td>
-                  <td className="py-4 pr-4 text-serene-900">{entry.businessName}</td>
-                  <td className="py-4 pr-4 text-serene-600">{entry.businessType}</td>
-                  <td className="py-4 pr-4 text-serene-600">{entry.inspectedAt}</td>
-                  <td className="py-4 pr-4 font-serif text-lg text-serene-900">
+                  <td className="py-4 pr-4 font-medium text-serene-navy">{entry.businessName}</td>
+                  <td className="py-4 pr-4 text-serene-slate">{entry.businessType}</td>
+                  <td className="py-4 pr-4 text-serene-slate">{entry.inspectedAt}</td>
+                  <td className="py-4 pr-4 font-serif text-lg text-serene-navy">
                     {entry.overallGrade}
                   </td>
                   <td className="py-4">
                     <button
                       type="button"
                       onClick={() => onLoadReport(entry.result)}
-                      className="text-xs font-medium text-serene-700 underline-offset-2 hover:text-serene-900 hover:underline"
+                      className="btn-link"
                     >
-                      Load Report
+                      View Saved Report
                     </button>
                   </td>
                 </tr>

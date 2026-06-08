@@ -18,7 +18,7 @@ const PILLARS = [
 
 export default function WhyThisMatters() {
   return (
-    <section className="no-print border-b border-serene-100 bg-serene-50/40 py-16 sm:py-24 lg:py-32">
+    <section className="no-print border-b border-serene-border bg-serene-50/40 py-16 sm:py-24 lg:py-32">
       <div className="section-container">
         <div className="max-w-2xl">
           <p className="section-label">Why This Matters</p>
@@ -42,14 +42,14 @@ export default function WhyThisMatters() {
               <h3 className="mt-4 font-serif text-xl font-medium leading-snug text-serene-900">
                 {title}
               </h3>
-              <p className="mt-4 text-sm leading-relaxed text-serene-500 sm:text-[15px]">
+              <p className="mt-4 text-sm leading-relaxed text-serene-slate sm:text-base">
                 {body}
               </p>
             </article>
           ))}
         </div>
 
-        <p className="mt-14 text-center text-xs text-serene-400 sm:mt-16">
+        <p className="mt-14 text-center text-sm text-serene-muted sm:mt-16">
           Inspection methodology aligned with industry-standard digital presence audits
         </p>
       </div>

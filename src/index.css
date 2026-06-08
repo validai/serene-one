@@ -13,8 +13,14 @@
   --color-serene-700: #334155;
   --color-serene-800: #1e293b;
   --color-serene-900: #0f172a;
-  --color-serene-accent: #1e3a5f;
-  --color-serene-accent-hover: #152a45;
+  --color-serene-navy: #0f172a;
+  --color-serene-blue: #2563eb;
+  --color-serene-blue-soft: #dbeafe;
+  --color-serene-slate: #475569;
+  --color-serene-muted: #64748b;
+  --color-serene-border: #d8e0ea;
+  --color-serene-accent: #2563eb;
+  --color-serene-accent-hover: #1d4ed8;
 }
 
 @layer base {
@@ -23,7 +29,7 @@
   }
 
   body {
-    @apply bg-white text-serene-700 antialiased;
+    @apply bg-white text-serene-slate antialiased;
     font-family: var(--font-sans);
     font-size: 16px;
     line-height: 1.65;
@@ -36,32 +42,44 @@
   }
 
   .section-label {
-    @apply text-[11px] font-semibold uppercase tracking-[0.18em] text-serene-400;
+    @apply text-xs font-semibold uppercase tracking-[0.16em] text-serene-blue;
   }
 
   .section-title {
     font-family: var(--font-serif);
-    @apply text-3xl font-medium leading-snug tracking-tight text-serene-900 sm:text-4xl;
+    @apply text-3xl font-medium leading-snug tracking-tight text-serene-navy sm:text-4xl;
   }
 
   .section-subtitle {
-    @apply mt-5 max-w-2xl text-base leading-relaxed text-serene-500 sm:text-lg;
+    @apply mt-5 max-w-2xl text-base leading-relaxed text-serene-slate sm:text-lg;
   }
 
   .section-subtitle-center {
-    @apply mx-auto mt-5 max-w-2xl text-base leading-relaxed text-serene-500 sm:text-lg;
+    @apply mx-auto mt-5 max-w-2xl text-base leading-relaxed text-serene-slate sm:text-lg;
+  }
+
+  .helper-text {
+    @apply text-sm leading-relaxed text-serene-muted;
   }
 
   .btn-primary {
-    @apply inline-flex items-center justify-center rounded-md bg-serene-900 px-7 py-3.5 text-sm font-medium tracking-wide text-white transition-colors hover:bg-serene-800;
+    @apply inline-flex items-center justify-center rounded-md bg-serene-navy px-7 py-3.5 text-sm font-medium tracking-wide text-white transition-colors hover:bg-serene-800;
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center rounded-md border border-serene-200 bg-white px-7 py-3.5 text-sm font-medium tracking-wide text-serene-700 transition-colors hover:border-serene-300 hover:bg-serene-50;
+    @apply inline-flex items-center justify-center rounded-md border border-serene-border bg-white px-7 py-3.5 text-sm font-medium tracking-wide text-serene-slate transition-colors hover:border-serene-blue hover:bg-serene-blue-soft hover:text-serene-navy;
+  }
+
+  .btn-link {
+    @apply text-sm font-medium text-serene-blue underline-offset-2 transition-colors hover:text-serene-accent-hover hover:underline;
+  }
+
+  .nav-link {
+    @apply text-sm text-serene-slate transition-colors hover:text-serene-blue;
   }
 
   .credibility-strip {
-    @apply flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-serene-400;
+    @apply flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-serene-muted;
   }
 
   .credibility-item {
@@ -69,14 +87,14 @@
   }
 
   .credibility-dot {
-    @apply h-1 w-1 rounded-full bg-serene-300;
+    @apply h-1.5 w-1.5 rounded-full bg-serene-blue;
   }
 
   /* Report card document (screen + print) */
   .report-card-document {
     background: #ffffff;
     color: #2d3748;
-    border: 1px solid #cbd5e0;
+    border: 1px solid #d8e0ea;
     padding: 2.5rem 2rem;
     font-family: var(--font-sans);
     font-size: 11pt;
@@ -97,7 +115,7 @@
     font-size: 11pt;
     font-weight: 600;
     letter-spacing: 0.28em;
-    color: #4a7c8c;
+    color: #2563eb;
     margin: 0;
   }
 
@@ -113,7 +131,7 @@
   .report-card-accent-line {
     width: 4rem;
     height: 2px;
-    background: #4a7c8c;
+    background: #2563eb;
     margin: 1rem auto 0;
   }
 
@@ -154,10 +172,10 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.12em;
-    color: #4a7c8c;
+    color: #2563eb;
     margin: 0 0 0.65rem;
     padding-bottom: 0.35rem;
-    border-bottom: 2px solid #4a7c8c;
+    border-bottom: 2px solid #2563eb;
   }
 
   .report-card-table {
@@ -174,7 +192,7 @@
     letter-spacing: 0.06em;
     color: #718096;
     padding: 0.5rem 0.6rem;
-    border-bottom: 1px solid #4a7c8c;
+    border-bottom: 1px solid #2563eb;
     background: #f7fafc;
   }
 
@@ -218,7 +236,7 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.1em;
-    color: #4a7c8c;
+    color: #2563eb;
     margin: 0 0 0.75rem;
   }
 
@@ -242,7 +260,7 @@
   }
 
   .report-card-final-grade {
-    border: 2px solid #4a7c8c;
+    border: 2px solid #2563eb;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -304,7 +322,7 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    color: #4a7c8c;
+    color: #2563eb;
     margin-right: 0.35rem;
   }
 

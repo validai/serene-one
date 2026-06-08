@@ -18,7 +18,7 @@ const CREDIBILITY_ITEMS = [
 
 export default function Hero({ onStartInspection, onViewSample }) {
   return (
-    <section className="no-print border-b border-serene-100 py-16 sm:py-24 lg:py-32">
+    <section className="no-print border-b border-serene-border py-16 sm:py-24 lg:py-32">
       <div className="section-container">
         <div className="grid items-start gap-12 lg:grid-cols-2 lg:gap-20 xl:gap-24">
           <div className="max-w-xl lg:pt-4">
@@ -33,10 +33,15 @@ export default function Hero({ onStartInspection, onViewSample }) {
             </p>
 
             <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:gap-4">
-              <button onClick={onStartInspection} className="btn-primary">
-                Request Inspection
-              </button>
-              <button onClick={onViewSample} className="btn-secondary">
+              <div className="flex flex-col gap-2">
+                <button onClick={onStartInspection} className="btn-primary">
+                  Request Inspection
+                </button>
+                <p className="helper-text">
+                  Request Inspection takes you to the intake form.
+                </p>
+              </div>
+              <button onClick={onViewSample} className="btn-secondary self-start">
                 View Sample Report
               </button>
             </div>
@@ -55,7 +60,7 @@ export default function Hero({ onStartInspection, onViewSample }) {
 
           <div className="flex justify-center lg:justify-end lg:pt-2">
             <div className="w-full max-w-md">
-              <p className="mb-4 text-center text-[11px] font-medium uppercase tracking-widest text-serene-400 lg:text-right">
+              <p className="mb-4 text-center text-xs font-semibold uppercase tracking-widest text-serene-blue lg:text-right">
                 Sample Inspection Report
               </p>
               <GradeCard result={MOCK_HERO_RESULT} compact />

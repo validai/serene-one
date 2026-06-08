@@ -19,7 +19,7 @@ export default function PrintableReport({ result, onPrint }) {
             </div>
           ) : (
             <button onClick={onPrint} className="btn-primary mt-10">
-              Print Professional Report Card
+              Print Report Card
             </button>
           )}
         </div>

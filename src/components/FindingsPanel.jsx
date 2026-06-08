@@ -25,7 +25,7 @@ export default function FindingsPanel({ result }) {
   const { findings } = result;
 
   return (
-    <section className="no-print border-t border-serene-100 bg-serene-50/30 py-16 sm:py-24 lg:py-32">
+    <section className="no-print border-t border-serene-border bg-serene-blue-soft/20 py-16 sm:py-24 lg:py-32">
       <div className="section-container">
         <div className="max-w-2xl">
           <p className="section-label">Inspector Notes</p>
@@ -41,7 +41,7 @@ export default function FindingsPanel({ result }) {
             <div key={key} className={`border-t-2 bg-white ${border}`}>
               <div className="px-6 py-6 sm:px-7 sm:py-7">
                 <h3 className="font-serif text-lg font-medium text-serene-900">{title}</h3>
-                <p className="mt-2 text-xs text-serene-400">{subtitle}</p>
+                <p className="mt-2 text-sm text-serene-muted">{subtitle}</p>
               </div>
               <ul className="space-y-px border-t border-serene-100">
                 {(findings[key] || []).map((item, i) => (
@@ -50,13 +50,13 @@ export default function FindingsPanel({ result }) {
                     className="border-b border-serene-50 px-6 py-5 last:border-b-0 sm:px-7"
                   >
                     <p className="text-sm font-medium text-serene-900">{item.title}</p>
-                    <p className="mt-2 text-sm leading-relaxed text-serene-500">
+                    <p className="mt-2 text-sm leading-relaxed text-serene-slate">
                       {item.description}
                     </p>
                   </li>
                 ))}
                 {(findings[key] || []).length === 0 && (
-                  <li className="px-6 py-5 text-sm text-serene-400 sm:px-7">
+                  <li className="px-6 py-5 text-sm text-serene-muted sm:px-7">
                     No findings in this category.
                   </li>
                 )}
