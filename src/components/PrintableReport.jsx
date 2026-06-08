@@ -57,43 +57,70 @@ function OpportunityGroup({ title, items, accentLetter }) {
 export default function PrintableReport({ result, onPrint, onNewReport, saveNotice = false }) {
   if (!result) return null;
 
-  const { canPrintReport, reportMessage, reportCard } = result;
+  const { canPrintReport, reportMessage, reportCard, businessName, overallGrade } = result;
+  const gradeColors = overallGrade ? getGradeColors(overallGrade) : null;
 
   return (
-    <section id="report-card" className="py-16 sm:py-24 lg:py-32">
+    <section id="report-card" className="page-section surface-muted">
       <div className="section-container">
-        <div className="no-print max-w-2xl">
+        <div className="no-print">
           <p className="section-label">Active Report</p>
-          <h2 className="section-title mt-4">Digital Presence Report Card</h2>
+          <h2 className="section-title mt-3">Digital Presence Report Card</h2>
           <p className="section-subtitle">
             Review and print the current inspection report card.
           </p>
 
-          {!canPrintReport ? (
-            <div className="mt-10 rounded-md border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-900">
-              {reportMessage}
-            </div>
-          ) : (
-            <>
-              {saveNotice && (
-                <p className="mt-8 text-sm font-medium text-emerald-700">
-                  Report saved on this device.
-                </p>
+          <div className="admin-card mt-10 max-w-3xl">
+            <div className="admin-card-body">
+              {canPrintReport && businessName && gradeColors && (
+                <div className="mb-6 flex flex-wrap items-center gap-3 border-b border-serene-border pb-6">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-serene-muted">
+                      Client
+                    </p>
+                    <p className="mt-1 text-lg font-medium text-serene-navy">{businessName}</p>
+                  </div>
+                  <span
+                    className="grade-chip"
+                    style={{
+                      backgroundColor: gradeColors.bg,
+                      color: gradeColors.text,
+                      border: `1px solid ${gradeColors.border}`,
+                    }}
+                  >
+                    {overallGrade}
+                  </span>
+                </div>
               )}
-              <div className="mt-10 flex flex-wrap gap-3">
-                <button onClick={onPrint} className="btn-primary">
-                  Print Report Card
-                </button>
-                <button onClick={onNewReport} className="btn-secondary">
-                  New Report
-                </button>
-              </div>
-            </>
-          )}
+
+              {!canPrintReport ? (
+                <div className="rounded-lg border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-900">
+                  {reportMessage}
+                </div>
+              ) : (
+                <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <button type="button" onClick={onPrint} className="btn-primary">
+                      Print Report Card
+                    </button>
+                    <button type="button" onClick={onNewReport} className="btn-secondary">
+                      New Report
+                    </button>
+                  </div>
+                  {saveNotice && (
+                    <span className="success-badge">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                      Saved on this device
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
         {canPrintReport && reportCard && (
-          <div className="printable-report report-card-document mx-auto mt-14 max-w-[8.5in] sm:mt-16">
+          <div className="printable-report report-card-document mx-auto mt-12 max-w-[8.5in] shadow-[0_12px_40px_rgba(15,23,42,0.08)] sm:mt-14">
             <header className="report-card-section report-card-header text-center">
               <p className="report-card-brand">{reportCard.header.brand}</p>
               <h1 className="report-card-title">{reportCard.header.title}</h1>

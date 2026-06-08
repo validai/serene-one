@@ -38,7 +38,15 @@
 
 @layer components {
   .section-container {
-    @apply mx-auto max-w-5xl px-5 sm:px-8 lg:px-10;
+    @apply mx-auto max-w-6xl px-5 sm:px-8 lg:px-10;
+  }
+
+  .page-section {
+    @apply py-14 sm:py-20 lg:py-24;
+  }
+
+  .surface-muted {
+    @apply bg-serene-50/70;
   }
 
   .section-label {
@@ -47,35 +55,103 @@
 
   .section-title {
     font-family: var(--font-serif);
-    @apply text-3xl font-medium leading-snug tracking-tight text-serene-navy sm:text-4xl;
+    @apply text-3xl font-medium leading-snug tracking-tight text-serene-navy sm:text-[2.35rem];
   }
 
   .section-subtitle {
-    @apply mt-5 max-w-2xl text-base leading-relaxed text-serene-slate sm:text-lg;
+    @apply mt-4 max-w-2xl text-base leading-relaxed text-serene-slate sm:text-[1.05rem];
   }
 
   .section-subtitle-center {
-    @apply mx-auto mt-5 max-w-2xl text-base leading-relaxed text-serene-slate sm:text-lg;
+    @apply mx-auto mt-4 max-w-2xl text-base leading-relaxed text-serene-slate sm:text-[1.05rem];
   }
 
   .helper-text {
     @apply text-sm leading-relaxed text-serene-muted;
   }
 
+  .admin-card {
+    @apply overflow-hidden rounded-xl border border-serene-border bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)];
+  }
+
+  .admin-card-header {
+    @apply border-b border-serene-border bg-gradient-to-b from-serene-50 to-white px-6 py-5 sm:px-8;
+  }
+
+  .admin-card-body {
+    @apply px-6 py-8 sm:px-8 sm:py-10;
+  }
+
+  .admin-card-footer {
+    @apply border-t border-serene-border bg-serene-50/50 px-6 py-6 sm:px-8 sm:py-7;
+  }
+
+  .admin-input {
+    @apply w-full rounded-lg border border-serene-border bg-white px-4 py-3.5 text-sm text-serene-navy shadow-sm transition placeholder:text-serene-muted focus:border-serene-blue focus:outline-none focus:ring-4 focus:ring-serene-blue/10;
+  }
+
+  .admin-search {
+    @apply w-full rounded-lg border border-serene-border bg-white px-4 py-3 text-sm text-serene-navy shadow-sm transition placeholder:text-serene-muted focus:border-serene-blue focus:outline-none focus:ring-4 focus:ring-serene-blue/10;
+  }
+
+  .count-badge {
+    @apply inline-flex items-center rounded-full border border-serene-blue/20 bg-serene-blue-soft px-3 py-1 text-xs font-semibold tracking-wide text-serene-navy;
+  }
+
+  .success-badge {
+    @apply inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3.5 py-1.5 text-sm font-medium text-emerald-800 shadow-sm;
+  }
+
+  .empty-state {
+    @apply rounded-xl border border-dashed border-serene-border bg-white px-6 py-8 text-center shadow-sm;
+  }
+
   .btn-primary {
-    @apply inline-flex items-center justify-center rounded-md bg-serene-navy px-7 py-3.5 text-sm font-medium tracking-wide text-white transition-colors hover:bg-serene-800;
+    @apply inline-flex items-center justify-center rounded-lg bg-serene-navy px-7 py-3.5 text-sm font-semibold tracking-wide text-white shadow-sm transition-all hover:bg-serene-800 hover:shadow-md focus:outline-none focus:ring-4 focus:ring-serene-navy/20 disabled:cursor-not-allowed disabled:opacity-60;
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center rounded-md border border-serene-border bg-white px-7 py-3.5 text-sm font-medium tracking-wide text-serene-slate transition-colors hover:border-serene-blue hover:bg-serene-blue-soft hover:text-serene-navy;
+    @apply inline-flex items-center justify-center rounded-lg border border-serene-border bg-white px-7 py-3.5 text-sm font-semibold tracking-wide text-serene-slate shadow-sm transition-all hover:border-serene-blue hover:bg-serene-blue-soft hover:text-serene-navy focus:outline-none focus:ring-4 focus:ring-serene-blue/10;
+  }
+
+  .btn-ghost-danger {
+    @apply inline-flex items-center justify-center rounded-lg border border-transparent px-4 py-2.5 text-sm font-medium text-serene-slate transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-700;
   }
 
   .btn-link {
-    @apply text-sm font-medium text-serene-blue underline-offset-2 transition-colors hover:text-serene-accent-hover hover:underline;
+    @apply rounded-md px-2 py-1 text-sm font-semibold text-serene-blue underline-offset-2 transition-colors hover:bg-serene-blue-soft hover:text-serene-accent-hover hover:underline;
   }
 
   .nav-link {
-    @apply text-sm text-serene-slate transition-colors hover:text-serene-blue;
+    @apply rounded-md px-3 py-2 text-sm font-medium text-serene-slate transition-colors hover:bg-serene-50 hover:text-serene-blue;
+  }
+
+  .archive-row {
+    @apply flex flex-col gap-4 px-5 py-5 transition-colors sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-5;
+  }
+
+  .archive-row:hover {
+    @apply bg-serene-blue-soft/30;
+  }
+
+  .grade-chip {
+    @apply inline-flex min-w-[2.75rem] items-center justify-center rounded-lg px-2.5 py-1 font-serif text-sm font-semibold shadow-sm;
+  }
+
+  .upload-tile {
+    @apply rounded-lg border p-4 transition-all sm:p-5;
+  }
+
+  .upload-tile-empty {
+    @apply border-dashed border-serene-border bg-white hover:border-serene-blue/40 hover:bg-serene-50/50;
+  }
+
+  .upload-tile-active {
+    @apply border-serene-blue/30 bg-white shadow-[0_1px_2px_rgba(37,99,235,0.08),0_4px_12px_rgba(37,99,235,0.08)];
+  }
+
+  .upload-tile-drag {
+    @apply border-serene-blue bg-serene-blue-soft shadow-[0_0_0_3px_rgba(37,99,235,0.12)];
   }
 
   .credibility-strip {
@@ -88,6 +164,10 @@
 
   .credibility-dot {
     @apply h-1.5 w-1.5 rounded-full bg-serene-blue;
+  }
+
+  .app-footer {
+    @apply border-t border-serene-border bg-serene-50/80;
   }
 
   /* Report card document (screen + print) */

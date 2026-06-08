@@ -5,6 +5,7 @@ import ResultsGrid from './components/ResultsGrid';
 import FindingsPanel from './components/FindingsPanel';
 import PrintableReport from './components/PrintableReport';
 import SavedReports from './components/SavedReports';
+import AppFooter from './components/AppFooter';
 import { saveInspectionResult } from './lib/inspectionHistory';
 import { runInspection } from './models/inspection';
 
@@ -75,9 +76,9 @@ function App() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="flex min-h-screen flex-col bg-white">
       <Navbar onViewReports={scrollToSavedReports} />
-      <main>
+      <main className="flex-1">
         <InspectionForm
           key={formResetKey}
           onRunInspection={handleRunInspection}
@@ -101,6 +102,7 @@ function App() {
         )}
         <SavedReports refreshKey={historyVersion} onViewReport={handleViewReport} />
       </main>
+      <AppFooter />
     </div>
   );
 }

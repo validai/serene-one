@@ -77,7 +77,7 @@ export default function GradeCard({ result, compact = false, className = '' }) {
     : scores;
 
   return (
-    <div className={`border border-serene-200 bg-white shadow-[0_1px_3px_rgba(15,23,42,0.06)] ${className}`}>
+    <div className={`overflow-hidden rounded-xl border border-serene-border bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.04)] ${className}`}>
       {/* Report header */}
       <div className="border-b border-serene-200 bg-serene-50 px-5 py-4 sm:px-7 sm:py-5">
         <div className="flex items-start justify-between gap-4">

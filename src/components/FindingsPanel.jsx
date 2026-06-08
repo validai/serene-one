@@ -25,25 +25,25 @@ export default function FindingsPanel({ result }) {
   const { findings } = result;
 
   return (
-    <section className="no-print border-t border-serene-border bg-serene-blue-soft/20 py-16 sm:py-24 lg:py-32">
+    <section className="no-print page-section surface-muted border-t border-serene-border">
       <div className="section-container">
-        <div className="max-w-2xl">
+        <div className="max-w-3xl">
           <p className="section-label">Inspector Notes</p>
-          <h2 className="section-title mt-4">Detailed Findings</h2>
+          <h2 className="section-title mt-3">Detailed Findings</h2>
           <p className="section-subtitle">
             Observations and recommendations based on submitted evidence and platform
             presence indicators.
           </p>
         </div>
 
-        <div className="mt-14 grid gap-8 sm:mt-16 lg:grid-cols-3 lg:gap-10">
+        <div className="mt-12 grid gap-6 sm:mt-14 lg:grid-cols-3 lg:gap-8">
           {SECTIONS.map(({ key, title, subtitle, border }) => (
-            <div key={key} className={`border-t-2 bg-white ${border}`}>
-              <div className="px-6 py-6 sm:px-7 sm:py-7">
+            <div key={key} className={`admin-card overflow-hidden border-t-4 ${border}`}>
+              <div className="border-b border-serene-border bg-serene-50/60 px-6 py-5 sm:px-7">
                 <h3 className="font-serif text-lg font-medium text-serene-900">{title}</h3>
                 <p className="mt-2 text-sm text-serene-muted">{subtitle}</p>
               </div>
-              <ul className="space-y-px border-t border-serene-100">
+              <ul className="divide-y divide-serene-100">
                 {(findings[key] || []).map((item, i) => (
                   <li
                     key={i}

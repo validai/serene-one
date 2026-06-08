@@ -19,26 +19,26 @@ export default function ResultsGrid({ result }) {
   const { scores } = result;
 
   return (
-    <section className="no-print py-16 sm:py-24 lg:py-32">
+    <section className="no-print page-section border-t border-serene-border">
       <div className="section-container">
-        <div className="max-w-2xl">
+        <div className="max-w-3xl">
           <p className="section-label">Inspection Findings</p>
-          <h2 className="section-title mt-4">Assessment Results</h2>
+          <h2 className="section-title mt-3">Assessment Results</h2>
           <p className="section-subtitle">
             Point-in-time evaluation for{' '}
-            <span className="font-medium text-serene-700">{result.businessName}</span>
+            <span className="font-semibold text-serene-navy">{result.businessName}</span>
             {' · '}
             {result.inspectedAt}
           </p>
         </div>
 
-        <div className="mt-14 grid gap-10 lg:mt-16 lg:grid-cols-5 lg:gap-12">
+        <div className="mt-12 grid gap-10 lg:mt-14 lg:grid-cols-5 lg:gap-12">
           <div className="lg:col-span-2">
-            <GradeCard result={result} className="w-full" />
+            <GradeCard result={result} className="w-full rounded-xl" />
           </div>
 
           <div className="lg:col-span-3">
-            <p className="mb-6 text-xs font-semibold uppercase tracking-wider text-serene-blue">
+            <p className="mb-5 text-xs font-semibold uppercase tracking-[0.14em] text-serene-blue">
               Detailed Score Indices
             </p>
             <div className="grid gap-4 sm:grid-cols-2">
@@ -47,7 +47,7 @@ export default function ResultsGrid({ result }) {
                 return (
                   <div
                     key={key}
-                    className="border border-serene-border bg-white px-5 py-6 sm:px-6"
+                    className="admin-card rounded-xl px-5 py-6 shadow-[0_1px_2px_rgba(15,23,42,0.04)] sm:px-6"
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div>
