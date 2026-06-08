@@ -71,12 +71,291 @@
   .credibility-dot {
     @apply h-1 w-1 rounded-full bg-serene-300;
   }
+
+  /* Report card document (screen + print) */
+  .report-card-document {
+    background: #ffffff;
+    color: #2d3748;
+    border: 1px solid #cbd5e0;
+    padding: 2.5rem 2rem;
+    font-family: var(--font-sans);
+    font-size: 11pt;
+    line-height: 1.5;
+  }
+
+  .report-card-section {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    margin-bottom: 1.5rem;
+  }
+
+  .report-card-header {
+    margin-bottom: 1.75rem;
+  }
+
+  .report-card-brand {
+    font-size: 11pt;
+    font-weight: 600;
+    letter-spacing: 0.28em;
+    color: #4a7c8c;
+    margin: 0;
+  }
+
+  .report-card-title {
+    font-family: var(--font-serif);
+    font-size: 16pt;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    color: #1a202c;
+    margin: 0.5rem 0 0;
+  }
+
+  .report-card-accent-line {
+    width: 4rem;
+    height: 2px;
+    background: #4a7c8c;
+    margin: 1rem auto 0;
+  }
+
+  .report-card-fields {
+    border: 1px solid #e2e8f0;
+    padding: 1rem 1.25rem;
+  }
+
+  .report-card-field-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.35rem 0;
+    border-bottom: 1px solid #f1f5f9;
+  }
+
+  .report-card-field-row:last-child {
+    border-bottom: none;
+  }
+
+  .report-card-field-label {
+    font-size: 9pt;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #718096;
+    flex-shrink: 0;
+  }
+
+  .report-card-field-value {
+    font-size: 10pt;
+    color: #2d3748;
+    text-align: right;
+  }
+
+  .report-card-table-heading {
+    font-size: 9pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: #4a7c8c;
+    margin: 0 0 0.65rem;
+    padding-bottom: 0.35rem;
+    border-bottom: 2px solid #4a7c8c;
+  }
+
+  .report-card-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 9.5pt;
+  }
+
+  .report-card-table th {
+    text-align: left;
+    font-size: 8pt;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #718096;
+    padding: 0.5rem 0.6rem;
+    border-bottom: 1px solid #4a7c8c;
+    background: #f7fafc;
+  }
+
+  .report-card-table td {
+    padding: 0.55rem 0.6rem;
+    border-bottom: 1px solid #e2e8f0;
+    vertical-align: top;
+    color: #2d3748;
+  }
+
+  .report-card-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  .report-card-num,
+  .report-card-grade-cell {
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .report-card-bottom-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+  }
+
+  @media (max-width: 640px) {
+    .report-card-bottom-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .report-card-scale-box,
+  .report-card-notes-box {
+    border: 1px solid #e2e8f0;
+    padding: 1rem 1.25rem;
+  }
+
+  .report-card-box-heading {
+    font-size: 9pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #4a7c8c;
+    margin: 0 0 0.75rem;
+  }
+
+  .report-card-scale-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .report-card-scale-list li {
+    padding: 0.2rem 0;
+    font-size: 9.5pt;
+    color: #4a5568;
+  }
+
+  .report-card-scale-letter {
+    display: inline-block;
+    width: 1.25rem;
+    font-weight: 700;
+    color: #2d3748;
+  }
+
+  .report-card-final-grade {
+    border: 2px solid #4a7c8c;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1.25rem;
+    text-align: center;
+  }
+
+  .report-card-final-label {
+    font-size: 8pt;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #718096;
+    margin: 0;
+  }
+
+  .report-card-final-letter {
+    font-family: var(--font-serif);
+    font-size: 48pt;
+    font-weight: 500;
+    line-height: 1;
+    color: #1a202c;
+    margin: 0.5rem 0;
+  }
+
+  .report-card-final-score {
+    font-size: 9pt;
+    color: #718096;
+    margin: 0;
+  }
+
+  .report-card-notes-content p {
+    margin: 0 0 0.65rem;
+    font-size: 9.5pt;
+    line-height: 1.55;
+    color: #4a5568;
+  }
+
+  .report-card-notes-content p:last-child {
+    margin-bottom: 0;
+  }
+
+  .report-card-steps-list {
+    margin: 0;
+    padding: 0 0 0 1.25rem;
+    font-size: 9.5pt;
+    color: #4a5568;
+  }
+
+  .report-card-steps-list li {
+    margin-bottom: 0.65rem;
+    line-height: 1.5;
+  }
+
+  .report-card-step-type {
+    display: inline-block;
+    font-size: 7.5pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #4a7c8c;
+    margin-right: 0.35rem;
+  }
+
+  .report-card-footer {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e2e8f0;
+    text-align: center;
+  }
+
+  .report-card-footer p {
+    margin: 0;
+    font-size: 8pt;
+    color: #a0aec0;
+    letter-spacing: 0.02em;
+  }
 }
 
 @media print {
+  html,
   body {
     background: white !important;
-    color: #0f172a !important;
+    color: #2d3748 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Hide entire app except the report card document */
+  body * {
+    visibility: hidden;
+  }
+
+  .printable-report,
+  .printable-report * {
+    visibility: visible;
+  }
+
+  .printable-report {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
   }
 
   .no-print {
@@ -87,19 +366,9 @@
     display: block !important;
   }
 
-  .printable-report {
-    display: block !important;
-    position: static !important;
-    width: 100% !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    box-shadow: none !important;
-    border: none !important;
-  }
-
   @page {
-    size: letter;
-    margin: 0.75in;
+    size: letter portrait;
+    margin: 0.5in;
   }
 }
 

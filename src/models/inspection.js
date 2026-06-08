@@ -319,6 +319,9 @@ export function formatPipelineResultForDisplay(pipelineResult) {
     recommendations: findings.recommendations,
     inspectedAt: report.inspectedAt,
     referenceId: report.referenceId,
+    canPrintReport: report.isValid !== false,
+    reportMessage: report.message,
+    reportCard: report.reportCard ?? null,
 
     // Structured pipeline output for future integrations
     pipeline: pipelineResult,
