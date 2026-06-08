@@ -6,6 +6,8 @@
  */
 
 import { scoreToGrade } from './scoringEngine.js';
+import { sortEvidence, stableHash } from './stableHash.js';
+import { logScoringDebug } from './scoringDebug.js';
 
 const ENGINE = 'placeholder-v1';
 
@@ -246,17 +248,9 @@ const GRADE_PRIORITY = {
 // Helpers
 // ---------------------------------------------------------------------------
 
-function generateId(prefix) {
-  return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
-}
-
-function hashString(str) {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = (hash << 5) - hash + str.charCodeAt(i);
-    hash |= 0;
-  }
-  return Math.abs(hash);
+function generateId(prefix, platform, businessType, source) {
+  const suffix = stableHash(`${platform}|${businessType}|${source}`).toString(36);
+  return `${prefix}_${suffix}`;
 }
 
 function gradeLetter(grade) {
@@ -271,11 +265,20 @@ function gradeToPriority(grade) {
   return GRADE_PRIORITY[gradeLetter(grade)] ?? 'Medium';
 }
 
-function computeQualityScore(evidence, businessType, template) {
-  const seed = hashString(`${evidence.id}-${evidence.platform}-${businessType}`);
-  const profileBoost = Object.values(template.scoreProfile).reduce((sum, v) => sum + v, 0);
+/**
+ * Deterministic platform quality score from stable evidence metadata only.
+ * Same platform + business type + source always yields the same score.
+ */
+export function stablePlatformScore(platform, businessType, source = '') {
+  const template = getTemplate(platform);
+  const profileBoost = Object.values(template.scoreProfile).reduce((sum, value) => sum + value, 0);
+  const seed = stableHash(`${platform}|${businessType}|${source}`);
   const base = 58 + (seed % 28);
   return Math.min(96, Math.round(base + profileBoost * 0.15));
+}
+
+function computeQualityScore(evidence, businessType) {
+  return stablePlatformScore(evidence.platform, businessType, evidence.source);
 }
 
 function getTemplate(platform) {
@@ -295,11 +298,27 @@ function getTemplate(platform) {
  */
 export function analyzeEvidenceForPlatform(evidence, businessType) {
   const template = getTemplate(evidence.platform);
-  const qualityScore = computeQualityScore(evidence, businessType, template);
+  const qualityScore = computeQualityScore(evidence, businessType);
   const grade = scoreToGrade(qualityScore);
+  const weights = template.scoreProfile;
+  const dimensionContributions = Object.fromEntries(
+    Object.entries(weights).map(([dimension, weight]) => [
+      dimension,
+      Math.round(qualityScore * weight),
+    ])
+  );
+
+  logScoringDebug('platform', {
+    platform: evidence.platform,
+    businessType,
+    source: evidence.source,
+    qualityScore,
+    grade,
+    dimensionContributions,
+  });
 
   return {
-    id: generateId('plat'),
+    id: generateId('plat', evidence.platform, businessType, evidence.source),
     platform: evidence.platform,
     evidencePresent: true,
     evidenceSource: evidence.source,
@@ -323,7 +342,9 @@ export function analyzeEvidenceForPlatform(evidence, businessType) {
  * @returns {PlatformInspection[]}
  */
 export function analyzeAllPlatformEvidence(inspection) {
-  return inspection.evidence.map((evidence) =>
+  const sortedEvidence = sortEvidence(inspection.evidence);
+
+  return sortedEvidence.map((evidence) =>
     analyzeEvidenceForPlatform(evidence, inspection.businessType)
   );
 }

@@ -13,6 +13,7 @@ import { analyzeAllPlatformEvidence } from '../lib/platformAnalysisEngine.js';
 import { scoreInspection } from '../lib/scoringEngine.js';
 import { generateFindings } from '../lib/findingsEngine.js';
 import { generateReport } from '../lib/reportGenerator.js';
+import { sortEvidence } from '../lib/stableHash.js';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -184,7 +185,7 @@ export function createInspection({
 export function addEvidence(inspection, evidence) {
   return {
     ...inspection,
-    evidence: [...inspection.evidence, evidence],
+    evidence: sortEvidence([...inspection.evidence, evidence]),
   };
 }
 
@@ -229,7 +230,7 @@ export function createInspectionFromFormInput({
   return createInspection({
     businessName,
     businessType,
-    evidence: resolvedEvidence,
+    evidence: sortEvidence(resolvedEvidence),
   });
 }
 

@@ -6,6 +6,8 @@
  */
 
 import { SCORE_DIMENSIONS } from '../models/inspection.js';
+import { sortPlatforms, stableHash } from './stableHash.js';
+import { logScoringDebug } from './scoringDebug.js';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -88,13 +90,20 @@ function clamp(value, min = 0, max = 100) {
   return Math.min(max, Math.max(min, value));
 }
 
-function hashString(str) {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = (hash << 5) - hash + str.charCodeAt(i);
-    hash |= 0;
-  }
-  return Math.abs(hash);
+function generateBaselineScores(businessType, platforms) {
+  const platformKey = sortPlatforms(platforms).join('|') || 'none';
+  const seed = stableHash(`${businessType}|${platformKey}`);
+
+  const rand = (offset) => 50 + ((seed + offset * 13) % 20);
+
+  return {
+    visibility: rand(1),
+    trust: rand(2),
+    seo: rand(3),
+    content: rand(4),
+    conversion: rand(5),
+    brandConsistency: rand(6),
+  };
 }
 
 function createEmptyScores() {
@@ -109,18 +118,8 @@ function getPlatformWeights(platform) {
   return PLATFORM_DIMENSION_WEIGHTS[platform] ?? DEFAULT_WEIGHTS;
 }
 
-function generateBaselineScores(businessName, businessType) {
-  const seed = hashString(`${businessName}-${businessType}`);
-  const rand = (offset) => 50 + ((seed + offset * 13) % 20);
-
-  return {
-    visibility: rand(1),
-    trust: rand(2),
-    seo: rand(3),
-    content: rand(4),
-    conversion: rand(5),
-    brandConsistency: rand(6),
-  };
+function sortPlatformInspections(platformInspections) {
+  return [...platformInspections].sort((a, b) => a.platform.localeCompare(b.platform));
 }
 
 function applyBusinessTypeModifiers(scores, businessType) {
@@ -140,7 +139,7 @@ function aggregateScoresFromPlatformInspections(platformInspections) {
   const totals = createEmptyScores();
   const counts = createScoreCounts();
 
-  for (const inspection of platformInspections) {
+  for (const inspection of sortPlatformInspections(platformInspections)) {
     const weights = getPlatformWeights(inspection.platform);
     const { qualityScore } = inspection;
 
@@ -191,9 +190,10 @@ function computeOverallScore(scores) {
  * @returns {ScoringResult}
  */
 export function scoreInspection(inspection, platformInspections = []) {
-  const { businessName, businessType } = inspection;
+  const { businessType, evidence } = inspection;
+  const inspectedPlatforms = [...new Set(evidence.map((item) => item.platform))];
   const baseline = applyBusinessTypeModifiers(
-    generateBaselineScores(businessName, businessType),
+    generateBaselineScores(businessType, inspectedPlatforms),
     businessType
   );
 
@@ -207,11 +207,25 @@ export function scoreInspection(inspection, platformInspections = []) {
   }
 
   const overallScore = computeOverallScore(scores);
+  const overallGrade = scoreToGrade(overallScore);
+
+  logScoringDebug('final', {
+    businessType,
+    platforms: sortPlatforms(inspectedPlatforms),
+    dimensionScores: scores,
+    overallScore,
+    overallGrade,
+    platformGrades: sortPlatformInspections(platformInspections).map((item) => ({
+      platform: item.platform,
+      qualityScore: item.qualityScore,
+      grade: item.grade,
+    })),
+  });
 
   return {
     scores,
     overallScore,
-    overallGrade: scoreToGrade(overallScore),
+    overallGrade,
     engine: platformInspections.length > 0 ? 'platform-analysis-v1' : 'baseline-v1',
     scoredAt: new Date().toISOString(),
   };

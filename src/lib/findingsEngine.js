@@ -5,9 +5,7 @@
  * Future: replace generateFindings() body with AI analysis without changing the interface.
  */
 
-function getInspectedPlatforms(inspection) {
-  return [...new Set(inspection.evidence.map((e) => e.platform))];
-}
+import { sortPlatforms, stableHash } from './stableHash.js';
 
 // ---------------------------------------------------------------------------
 // Types
