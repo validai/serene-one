@@ -6,6 +6,8 @@ import InspectionForm from './components/InspectionForm';
 import ResultsGrid from './components/ResultsGrid';
 import FindingsPanel from './components/FindingsPanel';
 import PrintableReport from './components/PrintableReport';
+import InspectionHistory from './components/InspectionHistory';
+import { saveInspectionResult } from './lib/inspectionHistory';
 import {
   runInspection,
   createSampleInspection,
@@ -16,28 +18,47 @@ import {
 function App() {
   const [result, setResult] = useState(null);
   const [isRunning, setIsRunning] = useState(false);
+  const [historyVersion, setHistoryVersion] = useState(0);
 
   const scrollToInspection = useCallback(() => {
     document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' });
   }, []);
 
-  const handleRunInspection = useCallback((data) => {
-    setIsRunning(true);
-    setTimeout(() => {
-      const inspectionResult = runInspection(data);
-      setResult(inspectionResult);
-      setIsRunning(false);
-      setTimeout(() => {
-        document.getElementById('results')?.scrollIntoView({ behavior: 'smooth' });
-      }, 100);
-    }, 800);
+  const persistResult = useCallback((inspectionResult) => {
+    setResult(inspectionResult);
+    if (inspectionResult.platformInspections?.length > 0) {
+      saveInspectionResult(inspectionResult);
+      setHistoryVersion((version) => version + 1);
+    }
   }, []);
+
+  const handleRunInspection = useCallback(
+    (data) => {
+      setIsRunning(true);
+      setTimeout(() => {
+        const inspectionResult = runInspection(data);
+        persistResult(inspectionResult);
+        setIsRunning(false);
+        setTimeout(() => {
+          document.getElementById('results')?.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      }, 800);
+    },
+    [persistResult]
+  );
 
   const handleViewSample = useCallback(() => {
     const sampleResult = formatPipelineResultForDisplay(
       runInspectionPipeline(createSampleInspection())
     );
-    setResult(sampleResult);
+    persistResult(sampleResult);
+    setTimeout(() => {
+      document.getElementById('report-card')?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
+  }, [persistResult]);
+
+  const handleLoadReport = useCallback((loadedResult) => {
+    setResult(loadedResult);
     setTimeout(() => {
       document.getElementById('report-card')?.scrollIntoView({ behavior: 'smooth' });
     }, 100);
@@ -63,6 +84,7 @@ function App() {
           )}
         </div>
         {result && <PrintableReport result={result} onPrint={handlePrint} />}
+        <InspectionHistory refreshKey={historyVersion} onLoadReport={handleLoadReport} />
       </main>
       <footer className="no-print border-t border-serene-100 py-12 sm:py-16">
         <div className="section-container">
