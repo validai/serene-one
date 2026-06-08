@@ -1,4 +1,5 @@
 import { getGradeColors } from '../lib/gradeColors';
+import SereneLogo from './SereneLogo';
 
 function GradeBadge({ grade, className = '' }) {
   const colors = getGradeColors(grade);
@@ -134,7 +135,16 @@ export default function PrintableReport({ result, onPrint, onNewReport, saveNoti
         {canPrintReport && reportCard && (
           <div className="printable-report report-card-document mx-auto mt-12 max-w-[8.5in] shadow-[0_12px_40px_rgba(15,23,42,0.08)] sm:mt-14">
             <header className="report-card-section report-card-header text-center">
-              <p className="report-card-brand">{reportCard.header.brand}</p>
+              <div className="report-card-logo-wrap">
+                <SereneLogo
+                  size={42}
+                  showText
+                  variant="report"
+                  align="center"
+                  sublabel="Digital Presence Inspection"
+                  className="mx-auto justify-center"
+                />
+              </div>
               <h1 className="report-card-title">{reportCard.header.title}</h1>
               <div className="report-card-accent-line" />
             </header>

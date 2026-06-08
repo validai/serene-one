@@ -193,6 +193,12 @@
     margin-bottom: 0.65rem;
   }
 
+  .report-card-logo-wrap {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 0.55rem;
+  }
+
   .report-card-brand {
     font-size: 11pt;
     font-weight: 600;
@@ -599,6 +605,15 @@
 
   .report-card-header {
     margin-bottom: 0.3rem !important;
+  }
+
+  .report-card-logo-wrap {
+    margin-bottom: 0.25rem !important;
+  }
+
+  .report-card-logo-wrap svg {
+    width: 34px !important;
+    height: 34px !important;
   }
 
   .report-card-brand {
