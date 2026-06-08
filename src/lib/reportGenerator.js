@@ -1,15 +1,9 @@
 /**
  * Report generator — assembles a client-ready inspection report from pipeline stages.
- *
- * Current implementation: formats mock pipeline output into a structured report card.
- * Future: extend with PDF export, API persistence, or AI-written executive summaries.
  */
 
 import { scoreToGrade } from './scoringEngine.js';
-
-// ---------------------------------------------------------------------------
-// Report card constants
-// ---------------------------------------------------------------------------
+import { getGradeLetter, getGradeStatusLabel, GRADE_SCALE } from './gradeColors.js';
 
 const GRADING_CATEGORIES = [
   { key: 'visibility', label: 'Visibility' },
@@ -19,22 +13,6 @@ const GRADING_CATEGORIES = [
   { key: 'conversion', label: 'Conversion' },
   { key: 'brandConsistency', label: 'Brand Consistency' },
 ];
-
-const GRADING_SCALE = [
-  { letter: 'A', label: 'Excellent' },
-  { letter: 'B', label: 'Strong' },
-  { letter: 'C', label: 'Needs Improvement' },
-  { letter: 'D', label: 'Weak' },
-  { letter: 'F', label: 'Urgent Attention' },
-];
-
-const GRADE_STATUS = {
-  A: 'Excellent',
-  B: 'Strong',
-  C: 'Needs Improvement',
-  D: 'Weak',
-  F: 'Urgent Attention',
-};
 
 const GRADE_PRIORITY = {
   A: 'Low',
@@ -46,9 +24,39 @@ const GRADE_PRIORITY = {
 
 const NO_EVIDENCE_MESSAGE = 'Add at least one screenshot to generate a report card.';
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
+const SHORT_PLATFORM_RECOMMENDATIONS = {
+  'Google Business Profile': 'Improve profile completeness',
+  Website: 'Strengthen call-to-action',
+  Facebook: 'Increase recent content activity',
+  Instagram: 'Add location/service keywords',
+  YouTube: 'Refresh outdated visuals',
+  TikTok: 'Align bio with conversion goals',
+  LinkedIn: 'Update company credentials',
+  Zillow: 'Improve listing photography',
+  'Realtor.com': 'Complete agent profile details',
+  'Homes.com': 'Refresh agent credentials',
+};
+
+const SHORT_STEP_PHRASES = {
+  critical: [
+    'Improve profile completeness',
+    'Strengthen local visibility signals',
+    'Address trust signal gaps',
+    'Fix SEO foundation issues',
+  ],
+  easyWins: [
+    'Refresh outdated visuals',
+    'Add location/service keywords',
+    'Request recent customer reviews',
+    'Unify profile imagery',
+  ],
+  opportunities: [
+    'Increase recent content activity',
+    'Strengthen call-to-action',
+    'Build cross-platform links',
+    'Establish content publishing cadence',
+  ],
+};
 
 function generateReferenceId() {
   const year = new Date().getFullYear();
@@ -64,16 +72,17 @@ function formatInspectionDate(date = new Date()) {
   });
 }
 
-function gradeLetter(grade) {
-  return grade.charAt(0);
-}
-
-function gradeToStatus(grade) {
-  return GRADE_STATUS[gradeLetter(grade)] ?? 'Needs Review';
-}
-
 function gradeToPriority(grade) {
-  return GRADE_PRIORITY[gradeLetter(grade)] ?? 'Medium';
+  return GRADE_PRIORITY[getGradeLetter(grade)] ?? 'Medium';
+}
+
+function shortenRecommendation(text, platform) {
+  if (SHORT_PLATFORM_RECOMMENDATIONS[platform]) {
+    return SHORT_PLATFORM_RECOMMENDATIONS[platform];
+  }
+  if (!text) return 'Maintain consistent platform presence';
+  const firstSentence = text.split('.')[0];
+  return firstSentence.length > 42 ? `${firstSentence.slice(0, 40)}…` : firstSentence;
 }
 
 function buildGradingRows(scores) {
@@ -84,7 +93,8 @@ function buildGradingRows(scores) {
       category: label,
       score,
       grade,
-      status: gradeToStatus(grade),
+      gradeLetter: getGradeLetter(grade),
+      status: getGradeStatusLabel(grade),
       priority: gradeToPriority(grade),
     };
   });
@@ -94,99 +104,71 @@ function buildPlatformRows(platformInspections) {
   return platformInspections.map((inspection) => ({
     platform: inspection.platform,
     grade: inspection.grade,
+    gradeLetter: getGradeLetter(inspection.grade),
     status: inspection.status,
     priority: inspection.priority,
-    recommendation: inspection.recommendations[0] ?? 'Continue monitoring platform presence.',
+    recommendation: shortenRecommendation(
+      inspection.recommendations[0],
+      inspection.platform
+    ),
   }));
 }
 
-function buildInspectorNotes(inspection, scoring, findings, platformInspections) {
-  const platformCount = platformInspections.length;
-  const notes = [];
+function buildInspectorNotes(inspection, scoring, platformInspections, findings) {
+  const count = platformInspections.length;
+  const platformList = platformInspections.map((pi) => pi.platform).join(', ');
 
-  notes.push(
-    `${inspection.businessName} was evaluated as a ${inspection.businessType} based on ${platformCount} submitted platform screenshot${platformCount !== 1 ? 's' : ''}. The composite digital presence score is ${scoring.overallScore} out of 100, earning an overall grade of ${scoring.overallGrade}.`
-  );
-
-  if (platformInspections.length > 0) {
-    const platformSummary = platformInspections
-      .map((pi) => `${pi.platform} (${pi.grade})`)
-      .join(', ');
-    notes.push(`Platform-level inspections: ${platformSummary}.`);
-  }
+  const notes = [
+    `${inspection.businessName} received an overall grade of ${scoring.overallGrade} (${scoring.overallScore}/100) from ${count} submitted platform screenshot${count !== 1 ? 's' : ''}: ${platformList}.`,
+  ];
 
   if (findings.critical.length > 0) {
     notes.push(
-      `Priority concerns identified: ${findings.critical.map((f) => f.title.toLowerCase()).join('; ')}. These areas may significantly affect how customers discover and trust this business online.`
+      `Priority focus: ${findings.critical
+        .slice(0, 2)
+        .map((f) => f.title)
+        .join('; ')}.`
     );
-  }
-
-  if (findings.easyWins.length > 0) {
+  } else {
     notes.push(
-      `Recommended quick improvements include ${findings.easyWins.map((f) => f.title.toLowerCase()).join('; ')}. These changes typically require minimal effort with meaningful impact.`
+      'Submitted evidence supports a point-in-time review of visibility, trust, and brand consistency signals.'
     );
   }
 
-  if (findings.opportunities.length > 0) {
-    notes.push(
-      `Strategic opportunities for growth: ${findings.opportunities.map((f) => f.title.toLowerCase()).join('; ')}.`
-    );
-  }
-
-  notes.push(
-    'This assessment reflects a point-in-time review of submitted platform evidence and should be used to guide digital presence improvement planning.'
-  );
-
-  return notes;
+  return notes.slice(0, 3);
 }
 
 function buildRecommendedNextSteps(findings) {
   const steps = [];
 
-  for (const finding of findings.critical) {
+  findings.critical.slice(0, 2).forEach((finding, i) => {
     steps.push({
-      title: finding.title,
-      description: finding.description,
-      type: 'Critical',
+      text: SHORT_STEP_PHRASES.critical[i] ?? finding.title,
+      type: 'Priority',
     });
-  }
+  });
 
-  for (const finding of findings.easyWins) {
+  findings.easyWins.slice(0, 2).forEach((finding, i) => {
     steps.push({
-      title: finding.title,
-      description: finding.description,
+      text: SHORT_STEP_PHRASES.easyWins[i] ?? finding.title,
       type: 'Quick Win',
     });
-  }
+  });
 
-  for (const finding of findings.opportunities) {
+  findings.opportunities.slice(0, 1).forEach((finding, i) => {
     steps.push({
-      title: finding.title,
-      description: finding.description,
+      text: SHORT_STEP_PHRASES.opportunities[i] ?? finding.title,
       type: 'Strategic',
     });
-  }
+  });
 
-  return steps.slice(0, 8);
+  return steps.slice(0, 5);
 }
 
 function hasSubmittedEvidence(platformInspections) {
   return platformInspections.length > 0;
 }
 
-// ---------------------------------------------------------------------------
-// Public API
-// ---------------------------------------------------------------------------
-
-/**
- * Generate a structured inspection report from pipeline stage outputs.
- *
- * @param {import('../models/inspection.js').Inspection} inspection
- * @param {import('./scoringEngine.js').ScoringResult} scoring
- * @param {import('./findingsEngine.js').FindingsResult} findings
- * @param {import('./platformAnalysisEngine.js').PlatformInspection[]} platformInspections
- * @returns {import('../models/inspection.js').InspectionReport}
- */
 export function generateReport(inspection, scoring, findings, platformInspections = []) {
   const evidenceSubmitted = hasSubmittedEvidence(platformInspections);
 
@@ -202,6 +184,8 @@ export function generateReport(inspection, scoring, findings, platformInspection
     };
   }
 
+  const overallGradeLetter = getGradeLetter(scoring.overallGrade);
+
   const reportCard = {
     header: {
       brand: 'SERENE ONE',
@@ -214,17 +198,23 @@ export function generateReport(inspection, scoring, findings, platformInspection
         new Date(inspection.completedAt ?? Date.now())
       ),
       inspectionId: generateReferenceId(),
-      preparedBy: 'Serene One',
     },
     gradingTable: buildGradingRows(scoring.scores),
     platformTable: buildPlatformRows(platformInspections),
-    gradingScale: GRADING_SCALE,
+    gradingScale: GRADE_SCALE.map(({ letter, label }) => ({ letter, label })),
     finalGrade: {
       grade: scoring.overallGrade,
+      gradeLetter: overallGradeLetter,
       score: scoring.overallScore,
       label: 'Overall Digital Presence Grade',
+      status: getGradeStatusLabel(scoring.overallGrade),
     },
-    inspectorNotes: buildInspectorNotes(inspection, scoring, findings, platformInspections),
+    inspectorNotes: buildInspectorNotes(
+      inspection,
+      scoring,
+      platformInspections,
+      findings
+    ),
     recommendedNextSteps: buildRecommendedNextSteps(findings),
   };
 
@@ -253,19 +243,13 @@ export function generateReport(inspection, scoring, findings, platformInspection
     },
     recommendations: findings.recommendations,
     disclaimer:
-      'Prepared by Serene One Inspection Services · Point-in-time digital presence assessment · Confidential',
+      'Prepared by Serene One · Point-in-time assessment · Confidential',
     engine: 'mock-v1',
   };
 }
 
 export { NO_EVIDENCE_MESSAGE };
 
-/**
- * Strip finding metadata for legacy UI components that expect title/description only.
- *
- * @param {import('./findingsEngine.js').Finding[]} findings
- * @returns {Array<{title: string, description: string}>}
- */
 export function simplifyFindingsForDisplay(findings) {
   return findings.map(({ title, description }) => ({ title, description }));
 }
