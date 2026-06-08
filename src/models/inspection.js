@@ -2,12 +2,14 @@
  * Inspection domain models and pipeline orchestration.
  *
  * Pipeline stages (each swappable for API/AI integrations):
- *   1. Inspection intake  → createInspection / createEvidence
- *   2. Scoring            → scoringEngine.scoreInspection
- *   3. Findings           → findingsEngine.generateFindings
- *   4. Report             → reportGenerator.generateReport
+ *   1. Inspection intake       → createInspection / createEvidence
+ *   2. Platform analysis       → platformAnalysisEngine.analyzeAllPlatformEvidence
+ *   3. Scoring                 → scoringEngine.scoreInspection
+ *   4. Findings                → findingsEngine.generateFindings
+ *   5. Report                  → reportGenerator.generateReport
  */
 
+import { analyzeAllPlatformEvidence } from '../lib/platformAnalysisEngine.js';
 import { scoreInspection } from '../lib/scoringEngine.js';
 import { generateFindings } from '../lib/findingsEngine.js';
 import { generateReport } from '../lib/reportGenerator.js';
@@ -256,6 +258,7 @@ export function createSampleInspection() {
 /**
  * @typedef {Object} InspectionPipelineResult
  * @property {Inspection} inspection
+ * @property {import('../lib/platformAnalysisEngine.js').PlatformInspection[]} platformInspections
  * @property {import('../lib/scoringEngine.js').ScoringResult} scoring
  * @property {import('../lib/findingsEngine.js').FindingsResult} findings
  * @property {import('../lib/reportGenerator.js').InspectionReport} report
@@ -275,9 +278,10 @@ export function runInspectionPipeline(inspection) {
     submittedAt: inspection.submittedAt ?? new Date().toISOString(),
   };
 
-  const scoring = scoreInspection(submitted);
+  const platformInspections = analyzeAllPlatformEvidence(submitted);
+  const scoring = scoreInspection(submitted, platformInspections);
   const findings = generateFindings(submitted, scoring);
-  const report = generateReport(submitted, scoring, findings);
+  const report = generateReport(submitted, scoring, findings, platformInspections);
 
   const completed = {
     ...submitted,
@@ -287,6 +291,7 @@ export function runInspectionPipeline(inspection) {
 
   return {
     inspection: completed,
+    platformInspections,
     scoring,
     findings,
     report,
@@ -301,13 +306,15 @@ export function runInspectionPipeline(inspection) {
  * @returns {Object}
  */
 export function formatPipelineResultForDisplay(pipelineResult) {
-  const { inspection, scoring, findings, report } = pipelineResult;
+  const { inspection, platformInspections, scoring, findings, report } = pipelineResult;
 
   return {
     // Legacy flat fields consumed by existing UI components
+    inspectionId: inspection.id,
     businessName: inspection.businessName,
     businessType: inspection.businessType,
     inspectedPlatforms: getInspectedPlatforms(inspection),
+    platformInspections,
     overallGrade: scoring.overallGrade,
     overallScore: scoring.overallScore,
     scores: scoring.scores,

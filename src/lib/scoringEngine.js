@@ -1,15 +1,11 @@
 /**
- * Scoring engine — evaluates inspection evidence and produces dimension scores.
+ * Scoring engine — evaluates platform inspections and produces dimension scores.
  *
- * Current implementation: deterministic mock scoring.
+ * Current implementation: aggregates placeholder platform quality scores.
  * Future: replace scoreInspection() body with API/AI calls without changing the interface.
  */
 
 import { SCORE_DIMENSIONS } from '../models/inspection.js';
-
-function getInspectedPlatforms(inspection) {
-  return [...new Set(inspection.evidence.map((e) => e.platform))];
-}
 
 // ---------------------------------------------------------------------------
 // Types
@@ -30,8 +26,8 @@ function getInspectedPlatforms(inspection) {
  * @property {ScoreMap} scores
  * @property {number} overallScore
  * @property {string} overallGrade
- * @property {string} engine - Identifier for the scoring provider
- * @property {string} scoredAt - ISO timestamp
+ * @property {string} engine
+ * @property {string} scoredAt
  */
 
 // ---------------------------------------------------------------------------
@@ -55,15 +51,37 @@ export function scoreToGrade(score) {
 }
 
 // ---------------------------------------------------------------------------
-// Mock scoring internals (replaceable)
+// Platform → dimension weight maps (replaceable with AI output)
 // ---------------------------------------------------------------------------
 
+const PLATFORM_DIMENSION_WEIGHTS = {
+  'Google Business Profile': { visibility: 0.35, trust: 0.35, seo: 0.3 },
+  Website: { seo: 0.35, conversion: 0.35, trust: 0.3 },
+  Facebook: { trust: 0.3, content: 0.35, brandConsistency: 0.35 },
+  Instagram: { content: 0.4, brandConsistency: 0.35, conversion: 0.25 },
+  YouTube: { content: 0.45, seo: 0.3, brandConsistency: 0.25 },
+  TikTok: { content: 0.4, brandConsistency: 0.3, visibility: 0.3 },
+  LinkedIn: { trust: 0.4, brandConsistency: 0.3, content: 0.3 },
+  Zillow: { visibility: 0.35, trust: 0.35, conversion: 0.3 },
+  'Realtor.com': { visibility: 0.3, trust: 0.35, conversion: 0.35 },
+  'Homes.com': { visibility: 0.3, trust: 0.35, conversion: 0.35 },
+};
+
+const DEFAULT_WEIGHTS = {
+  visibility: 0.2,
+  trust: 0.2,
+  seo: 0.15,
+  content: 0.15,
+  conversion: 0.15,
+  brandConsistency: 0.15,
+};
+
 const BUSINESS_TYPE_MODIFIERS = {
-  'Local Business': { visibility: 5, trust: 3, seo: 2 },
-  Restaurant: { visibility: 8, trust: 5, content: 4 },
-  Realtor: { visibility: 6, trust: 7, conversion: 5, brandConsistency: 4 },
-  'Service Business': { visibility: 4, trust: 4, conversion: 3 },
-  'Creator / Artist': { content: 8, brandConsistency: 6, visibility: 3 },
+  'Local Business': { visibility: 3, trust: 2, seo: 1 },
+  Restaurant: { visibility: 4, trust: 3, content: 2 },
+  Realtor: { visibility: 3, trust: 4, conversion: 2 },
+  'Service Business': { visibility: 2, trust: 2, conversion: 2 },
+  'Creator / Artist': { content: 4, brandConsistency: 3, visibility: 1 },
 };
 
 function clamp(value, min = 0, max = 100) {
@@ -79,9 +97,21 @@ function hashString(str) {
   return Math.abs(hash);
 }
 
-function generateBaseScores(businessName, businessType) {
+function createEmptyScores() {
+  return Object.fromEntries(SCORE_DIMENSIONS.map((dim) => [dim, 0]));
+}
+
+function createScoreCounts() {
+  return Object.fromEntries(SCORE_DIMENSIONS.map((dim) => [dim, 0]));
+}
+
+function getPlatformWeights(platform) {
+  return PLATFORM_DIMENSION_WEIGHTS[platform] ?? DEFAULT_WEIGHTS;
+}
+
+function generateBaselineScores(businessName, businessType) {
   const seed = hashString(`${businessName}-${businessType}`);
-  const rand = (offset) => 55 + ((seed + offset * 17) % 35);
+  const rand = (offset) => 50 + ((seed + offset * 13) % 20);
 
   return {
     visibility: rand(1),
@@ -106,15 +136,42 @@ function applyBusinessTypeModifiers(scores, businessType) {
   return adjusted;
 }
 
-function applyEvidenceBonus(scores, evidenceCount) {
-  const bonus = Math.min(evidenceCount * 3, 18);
-  const adjusted = { ...scores };
+function aggregateScoresFromPlatformInspections(platformInspections) {
+  const totals = createEmptyScores();
+  const counts = createScoreCounts();
 
-  for (const key of SCORE_DIMENSIONS) {
-    adjusted[key] = clamp(adjusted[key] + bonus * 0.4);
+  for (const inspection of platformInspections) {
+    const weights = getPlatformWeights(inspection.platform);
+    const { qualityScore } = inspection;
+
+    for (const [dimension, weight] of Object.entries(weights)) {
+      if (totals[dimension] !== undefined) {
+        totals[dimension] += qualityScore * weight;
+        counts[dimension] += weight;
+      }
+    }
   }
 
-  return adjusted;
+  const scores = createEmptyScores();
+  for (const dim of SCORE_DIMENSIONS) {
+    scores[dim] = counts[dim] > 0 ? Math.round(totals[dim] / counts[dim]) : 0;
+  }
+
+  return scores;
+}
+
+function mergeWithBaseline(platformScores, baseline) {
+  const merged = createEmptyScores();
+
+  for (const dim of SCORE_DIMENSIONS) {
+    if (platformScores[dim] > 0) {
+      merged[dim] = clamp(Math.round(platformScores[dim] * 0.75 + baseline[dim] * 0.25));
+    } else {
+      merged[dim] = baseline[dim];
+    }
+  }
+
+  return merged;
 }
 
 function computeOverallScore(scores) {
@@ -127,18 +184,27 @@ function computeOverallScore(scores) {
 // ---------------------------------------------------------------------------
 
 /**
- * Score an inspection based on business profile and submitted evidence.
+ * Score an inspection using platform inspection analysis results.
  *
  * @param {import('../models/inspection.js').Inspection} inspection
+ * @param {import('./platformAnalysisEngine.js').PlatformInspection[]} platformInspections
  * @returns {ScoringResult}
  */
-export function scoreInspection(inspection) {
-  const { businessName, businessType, evidence } = inspection;
-  const inspectedPlatforms = getInspectedPlatforms(inspection);
+export function scoreInspection(inspection, platformInspections = []) {
+  const { businessName, businessType } = inspection;
+  const baseline = applyBusinessTypeModifiers(
+    generateBaselineScores(businessName, businessType),
+    businessType
+  );
 
-  let scores = generateBaseScores(businessName, businessType);
-  scores = applyBusinessTypeModifiers(scores, businessType);
-  scores = applyEvidenceBonus(scores, evidence.length || inspectedPlatforms.length);
+  let scores;
+
+  if (platformInspections.length === 0) {
+    scores = baseline;
+  } else {
+    const platformScores = aggregateScoresFromPlatformInspections(platformInspections);
+    scores = mergeWithBaseline(platformScores, baseline);
+  }
 
   const overallScore = computeOverallScore(scores);
 
@@ -146,7 +212,7 @@ export function scoreInspection(inspection) {
     scores,
     overallScore,
     overallGrade: scoreToGrade(overallScore),
-    engine: 'mock-v1',
+    engine: platformInspections.length > 0 ? 'platform-analysis-v1' : 'baseline-v1',
     scoredAt: new Date().toISOString(),
   };
 }
