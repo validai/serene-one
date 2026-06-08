@@ -39,12 +39,14 @@ function ScoreRow({ label, value }) {
 }
 
 export default function GradeCard({ result, compact = false, className = '' }) {
-  const reportRef = 'S1-2026-0847';
-  const assessmentDate = new Date().toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
+  const reportRef = result?.referenceId ?? 'S1-PREVIEW';
+  const assessmentDate =
+    result?.inspectedAt ??
+    new Date().toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
 
   if (!result) {
     return (

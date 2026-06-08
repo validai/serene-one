@@ -6,13 +6,12 @@ import InspectionForm from './components/InspectionForm';
 import ResultsGrid from './components/ResultsGrid';
 import FindingsPanel from './components/FindingsPanel';
 import PrintableReport from './components/PrintableReport';
-import { runInspection } from './lib/gradingEngine';
-
-const SAMPLE_INSPECTION = {
-  businessName: 'Sample Business Co.',
-  businessType: 'Local Business',
-  uploadedPlatforms: ['Google Business Profile', 'Website', 'Facebook', 'Instagram'],
-};
+import {
+  runInspection,
+  createSampleInspection,
+  runInspectionPipeline,
+  formatPipelineResultForDisplay,
+} from './models/inspection';
 
 function App() {
   const [result, setResult] = useState(null);
@@ -35,7 +34,9 @@ function App() {
   }, []);
 
   const handleViewSample = useCallback(() => {
-    const sampleResult = runInspection(SAMPLE_INSPECTION);
+    const sampleResult = formatPipelineResultForDisplay(
+      runInspectionPipeline(createSampleInspection())
+    );
     setResult(sampleResult);
     setTimeout(() => {
       document.getElementById('report-card')?.scrollIntoView({ behavior: 'smooth' });

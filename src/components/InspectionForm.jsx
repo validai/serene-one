@@ -1,13 +1,5 @@
 import { useCallback, useState } from 'react';
-import { PLATFORMS } from '../lib/gradingEngine';
-
-const BUSINESS_TYPES = [
-  'Local Business',
-  'Restaurant',
-  'Realtor',
-  'Service Business',
-  'Creator / Artist',
-];
+import { PLATFORMS, BUSINESS_TYPES } from '../models/inspection';
 
 export default function InspectionForm({ onRunInspection, isRunning }) {
   const [businessName, setBusinessName] = useState('');

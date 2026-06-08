@@ -19,6 +19,7 @@ export default function PrintableReport({ result, onPrint }) {
     recommendations,
     inspectedAt,
     inspectedPlatforms,
+    referenceId,
   } = result;
 
   return (
@@ -59,7 +60,7 @@ export default function PrintableReport({ result, onPrint }) {
                   Reference
                 </p>
                 <p className="mt-1 text-[11px] font-medium tabular-nums text-serene-600">
-                  S1-2026-0847
+                  {referenceId ?? 'S1-PREVIEW'}
                 </p>
               </div>
             </div>
