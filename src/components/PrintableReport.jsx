@@ -54,7 +54,7 @@ function OpportunityGroup({ title, items, accentLetter }) {
   );
 }
 
-export default function PrintableReport({ result, onPrint, onNewReport }) {
+export default function PrintableReport({ result, onPrint, onNewReport, saveNotice = false }) {
   if (!result) return null;
 
   const { canPrintReport, reportMessage, reportCard } = result;
@@ -74,14 +74,21 @@ export default function PrintableReport({ result, onPrint, onNewReport }) {
               {reportMessage}
             </div>
           ) : (
-            <div className="mt-10 flex flex-wrap gap-3">
-              <button onClick={onPrint} className="btn-primary">
-                Print Report Card
-              </button>
-              <button onClick={onNewReport} className="btn-secondary">
-                New Report
-              </button>
-            </div>
+            <>
+              {saveNotice && (
+                <p className="mt-8 text-sm font-medium text-emerald-700">
+                  Report saved on this device.
+                </p>
+              )}
+              <div className="mt-10 flex flex-wrap gap-3">
+                <button onClick={onPrint} className="btn-primary">
+                  Print Report Card
+                </button>
+                <button onClick={onNewReport} className="btn-secondary">
+                  New Report
+                </button>
+              </div>
+            </>
           )}
         </div>
 

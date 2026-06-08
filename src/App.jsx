@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import Navbar from './components/Navbar';
 import InspectionForm from './components/InspectionForm';
 import ResultsGrid from './components/ResultsGrid';
@@ -13,6 +13,8 @@ function App() {
   const [isRunning, setIsRunning] = useState(false);
   const [historyVersion, setHistoryVersion] = useState(0);
   const [formResetKey, setFormResetKey] = useState(0);
+  const [saveNotice, setSaveNotice] = useState(false);
+  const saveNoticeTimerRef = useRef(null);
 
   const scrollToIntake = useCallback(() => {
     document.getElementById('intake')?.scrollIntoView({ behavior: 'smooth' });
@@ -27,6 +29,15 @@ function App() {
     if (inspectionResult.platformInspections?.length > 0) {
       saveInspectionResult(inspectionResult);
       setHistoryVersion((version) => version + 1);
+      setSaveNotice(true);
+      if (saveNoticeTimerRef.current) {
+        clearTimeout(saveNoticeTimerRef.current);
+      }
+      saveNoticeTimerRef.current = setTimeout(() => {
+        setSaveNotice(false);
+      }, 5000);
+    } else {
+      setSaveNotice(false);
     }
   }, []);
 
@@ -54,6 +65,7 @@ function App() {
 
   const handleNewReport = useCallback(() => {
     setResult(null);
+    setSaveNotice(false);
     setFormResetKey((key) => key + 1);
     scrollToIntake();
   }, [scrollToIntake]);
@@ -84,6 +96,7 @@ function App() {
             result={result}
             onPrint={handlePrint}
             onNewReport={handleNewReport}
+            saveNotice={saveNotice}
           />
         )}
         <SavedReports refreshKey={historyVersion} onViewReport={handleViewReport} />
