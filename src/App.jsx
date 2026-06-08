@@ -6,7 +6,7 @@ import InspectionForm from './components/InspectionForm';
 import ResultsGrid from './components/ResultsGrid';
 import FindingsPanel from './components/FindingsPanel';
 import PrintableReport from './components/PrintableReport';
-import InspectionHistory from './components/InspectionHistory';
+import SavedReports from './components/SavedReports';
 import { saveInspectionResult } from './lib/inspectionHistory';
 import {
   runInspection,
@@ -19,9 +19,14 @@ function App() {
   const [result, setResult] = useState(null);
   const [isRunning, setIsRunning] = useState(false);
   const [historyVersion, setHistoryVersion] = useState(0);
+  const [formResetKey, setFormResetKey] = useState(0);
 
   const scrollToInspection = useCallback(() => {
     document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' });
+  }, []);
+
+  const scrollToSavedReports = useCallback(() => {
+    document.getElementById('saved-reports')?.scrollIntoView({ behavior: 'smooth' });
   }, []);
 
   const persistResult = useCallback((inspectionResult) => {
@@ -57,12 +62,18 @@ function App() {
     }, 100);
   }, [persistResult]);
 
-  const handleLoadReport = useCallback((loadedResult) => {
+  const handleViewReport = useCallback((loadedResult) => {
     setResult(loadedResult);
     setTimeout(() => {
       document.getElementById('report-card')?.scrollIntoView({ behavior: 'smooth' });
     }, 100);
   }, []);
+
+  const handleNewReport = useCallback(() => {
+    setResult(null);
+    setFormResetKey((key) => key + 1);
+    scrollToInspection();
+  }, [scrollToInspection]);
 
   const handlePrint = useCallback(() => {
     window.print();
@@ -70,11 +81,18 @@ function App() {
 
   return (
     <div className="min-h-screen bg-white">
-      <Navbar onStartInspection={scrollToInspection} />
+      <Navbar
+        onStartInspection={scrollToInspection}
+        onViewReports={scrollToSavedReports}
+      />
       <main>
         <Hero onStartInspection={scrollToInspection} onViewSample={handleViewSample} />
         <WhyThisMatters />
-        <InspectionForm onRunInspection={handleRunInspection} isRunning={isRunning} />
+        <InspectionForm
+          key={formResetKey}
+          onRunInspection={handleRunInspection}
+          isRunning={isRunning}
+        />
         <div id="results">
           {result && (
             <>
@@ -83,8 +101,14 @@ function App() {
             </>
           )}
         </div>
-        {result && <PrintableReport result={result} onPrint={handlePrint} />}
-        <InspectionHistory refreshKey={historyVersion} onLoadReport={handleLoadReport} />
+        {result && (
+          <PrintableReport
+            result={result}
+            onPrint={handlePrint}
+            onNewReport={handleNewReport}
+          />
+        )}
+        <SavedReports refreshKey={historyVersion} onViewReport={handleViewReport} />
       </main>
       <footer className="no-print border-t border-serene-border py-12 sm:py-16">
         <div className="section-container">
