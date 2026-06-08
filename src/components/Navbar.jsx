@@ -1,4 +1,4 @@
-export default function Navbar({ onStartInspection }) {
+export default function Navbar({ onStartInspection, onViewReports }) {
   const scrollTo = (id) => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -31,7 +31,7 @@ export default function Navbar({ onStartInspection }) {
             <button onClick={() => scrollTo('how-it-works')} className="nav-link">
               How It Works
             </button>
-            <button onClick={() => scrollTo('report-card')} className="nav-link">
+            <button onClick={onViewReports} className="nav-link">
               Reports
             </button>
           </div>
