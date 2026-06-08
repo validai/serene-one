@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
+  cleanUpDuplicateReports,
   deleteAllInspections,
   deleteInspectionById,
   getInspectionHistory,
@@ -26,6 +27,7 @@ function GradeChip({ grade }) {
 export default function SavedReports({ onViewReport, refreshKey = 0 }) {
   const [history, setHistory] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [archiveMessage, setArchiveMessage] = useState('');
 
   const loadHistory = () => {
     setHistory(getInspectionHistory());
@@ -66,6 +68,17 @@ export default function SavedReports({ onViewReport, refreshKey = 0 }) {
     if (!window.confirm('Clear all saved reports from this device?')) return;
     deleteAllInspections();
     loadHistory();
+    setArchiveMessage('');
+  };
+
+  const handleCleanUpDuplicates = () => {
+    const { removedCount } = cleanUpDuplicateReports();
+    loadHistory();
+    if (removedCount > 0) {
+      setArchiveMessage('Duplicate reports cleaned up.');
+    } else {
+      setArchiveMessage('No duplicate reports found.');
+    }
   };
 
   return (
@@ -101,10 +114,21 @@ export default function SavedReports({ onViewReport, refreshKey = 0 }) {
                 className="admin-search"
               />
             </div>
-            <button type="button" onClick={handleClearAll} className="btn-ghost-danger self-start">
-              Clear All Reports
-            </button>
+            <div className="flex flex-wrap gap-2 self-start">
+              <button type="button" onClick={handleCleanUpDuplicates} className="btn-secondary">
+                Clean Up Duplicates
+              </button>
+              <button type="button" onClick={handleClearAll} className="btn-ghost-danger">
+                Clear All Reports
+              </button>
+            </div>
           </div>
+        )}
+
+        {archiveMessage && (
+          <p className="helper-text mt-4 rounded-lg border border-serene-border bg-serene-50 px-4 py-3 text-sm text-serene-navy">
+            {archiveMessage}
+          </p>
         )}
 
         {history.length === 0 ? (

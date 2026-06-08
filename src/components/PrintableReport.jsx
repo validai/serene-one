@@ -54,7 +54,7 @@ function OpportunityGroup({ title, items, accentLetter }) {
   );
 }
 
-export default function PrintableReport({ result, onPrint, onNewReport, saveNotice = false }) {
+export default function PrintableReport({ result, onPrint, onNewReport, saveNotice = '' }) {
   if (!result) return null;
 
   const { canPrintReport, reportMessage, reportCard, businessName, overallGrade } = result;
@@ -108,9 +108,21 @@ export default function PrintableReport({ result, onPrint, onNewReport, saveNoti
                     </button>
                   </div>
                   {saveNotice && (
-                    <span className="success-badge">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                      Saved on this device
+                    <span
+                      className={
+                        saveNotice === 'Matching report already saved.'
+                          ? 'inline-flex items-center gap-2 rounded-full border border-serene-border bg-serene-50 px-3.5 py-1.5 text-sm font-medium text-serene-slate shadow-sm'
+                          : 'success-badge'
+                      }
+                    >
+                      <span
+                        className={`h-1.5 w-1.5 rounded-full ${
+                          saveNotice === 'Matching report already saved.'
+                            ? 'bg-serene-blue'
+                            : 'bg-emerald-500'
+                        }`}
+                      />
+                      {saveNotice}
                     </span>
                   )}
                 </div>

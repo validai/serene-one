@@ -14,7 +14,7 @@ function App() {
   const [isRunning, setIsRunning] = useState(false);
   const [historyVersion, setHistoryVersion] = useState(0);
   const [formResetKey, setFormResetKey] = useState(0);
-  const [saveNotice, setSaveNotice] = useState(false);
+  const [saveMessage, setSaveMessage] = useState('');
   const saveNoticeTimerRef = useRef(null);
 
   const scrollToIntake = useCallback(() => {
@@ -28,17 +28,21 @@ function App() {
   const persistResult = useCallback((inspectionResult) => {
     setResult(inspectionResult);
     if (inspectionResult.platformInspections?.length > 0) {
-      saveInspectionResult(inspectionResult);
+      const saveResult = saveInspectionResult(inspectionResult);
       setHistoryVersion((version) => version + 1);
-      setSaveNotice(true);
+      setSaveMessage(
+        saveResult.status === 'duplicate_skipped'
+          ? 'Matching report already saved.'
+          : 'Report saved on this device.'
+      );
       if (saveNoticeTimerRef.current) {
         clearTimeout(saveNoticeTimerRef.current);
       }
       saveNoticeTimerRef.current = setTimeout(() => {
-        setSaveNotice(false);
+        setSaveMessage('');
       }, 5000);
     } else {
-      setSaveNotice(false);
+      setSaveMessage('');
     }
   }, []);
 
@@ -66,7 +70,7 @@ function App() {
 
   const handleNewReport = useCallback(() => {
     setResult(null);
-    setSaveNotice(false);
+    setSaveMessage('');
     setFormResetKey((key) => key + 1);
     scrollToIntake();
   }, [scrollToIntake]);
@@ -97,7 +101,7 @@ function App() {
             result={result}
             onPrint={handlePrint}
             onNewReport={handleNewReport}
-            saveNotice={saveNotice}
+            saveNotice={saveMessage}
           />
         )}
         <SavedReports refreshKey={historyVersion} onViewReport={handleViewReport} />

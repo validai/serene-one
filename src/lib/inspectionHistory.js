@@ -1,3 +1,9 @@
+import {
+  getReportFingerprint,
+  removeDuplicateReports,
+  validateReportArchive,
+} from './archiveIntegrity.js';
+
 const STORAGE_KEY = 'serene-one-inspection-history';
 const MAX_HISTORY = 50;
 
@@ -10,7 +16,19 @@ const MAX_HISTORY = 50;
  * @property {string} inspectedAt
  * @property {string} overallGrade
  * @property {string} savedAt
+ * @property {string} [updatedAt]
+ * @property {string} fingerprint
  * @property {Object} result
+ */
+
+/**
+ * @typedef {'saved'|'duplicate_skipped'} SaveInspectionStatus
+ */
+
+/**
+ * @typedef {Object} SaveInspectionResult
+ * @property {SaveInspectionStatus} status
+ * @property {InspectionHistoryEntry} entry
  */
 
 function readStorage() {
@@ -28,23 +46,13 @@ function writeStorage(entries) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
 }
 
-function sortPlatforms(platforms) {
-  return [...platforms].sort((a, b) => a.localeCompare(b));
-}
-
-/**
- * Stable fingerprint for deduplicating saved reports.
- */
-export function getInspectionFingerprint(result) {
-  const platforms = sortPlatforms(result.inspectedPlatforms || []).join('|');
-  return `${result.businessType}|${platforms}|${result.overallGrade}|${result.overallScore}`;
-}
+export { getReportFingerprint, getReportFingerprint as getInspectionFingerprint };
 
 /**
  * Save a completed inspection result to local history.
  *
  * @param {Object} result - Display result from formatPipelineResultForDisplay
- * @returns {InspectionHistoryEntry}
+ * @returns {SaveInspectionResult}
  */
 export function saveInspectionResult(result) {
   const inspectionId = result.inspectionId ?? result.pipeline?.inspection?.id;
@@ -53,8 +61,26 @@ export function saveInspectionResult(result) {
     throw new Error('Inspection result missing id');
   }
 
-  const fingerprint = getInspectionFingerprint(result);
+  const fingerprint = getReportFingerprint(result);
+  const history = readStorage();
+  const existingIndex = history.findIndex((item) => getReportFingerprint(item) === fingerprint);
 
+  if (existingIndex !== -1) {
+    const existing = history[existingIndex];
+    const updatedEntry = {
+      ...existing,
+      updatedAt: new Date().toISOString(),
+    };
+    history[existingIndex] = updatedEntry;
+    writeStorage(history);
+
+    return {
+      status: 'duplicate_skipped',
+      entry: updatedEntry,
+    };
+  }
+
+  const now = new Date().toISOString();
   const entry = {
     id: inspectionId,
     referenceId: result.referenceId ?? null,
@@ -62,17 +88,19 @@ export function saveInspectionResult(result) {
     businessType: result.businessType,
     inspectedAt: result.inspectedAt,
     overallGrade: result.overallGrade,
-    savedAt: new Date().toISOString(),
+    savedAt: now,
+    updatedAt: now,
+    fingerprint,
     result,
   };
 
-  const history = readStorage().filter(
-    (item) => getInspectionFingerprint(item.result) !== fingerprint
-  );
   history.unshift(entry);
-
   writeStorage(history.slice(0, MAX_HISTORY));
-  return entry;
+
+  return {
+    status: 'saved',
+    entry,
+  };
 }
 
 /**
@@ -80,7 +108,9 @@ export function saveInspectionResult(result) {
  */
 export function getInspectionHistory() {
   return readStorage().sort(
-    (a, b) => new Date(b.savedAt).getTime() - new Date(a.savedAt).getTime()
+    (a, b) =>
+      new Date(b.updatedAt ?? b.savedAt).getTime() -
+      new Date(a.updatedAt ?? a.savedAt).getTime()
   );
 }
 
@@ -106,3 +136,17 @@ export function clearInspectionHistory() {
 export function deleteAllInspections() {
   clearInspectionHistory();
 }
+
+/**
+ * Remove duplicate fingerprints from storage, keeping the newest copy of each.
+ *
+ * @returns {{ removedCount: number, reports: InspectionHistoryEntry[] }}
+ */
+export function cleanUpDuplicateReports() {
+  const history = readStorage();
+  const { reports, removedCount } = removeDuplicateReports(history);
+  writeStorage(reports);
+  return { removedCount, reports };
+}
+
+export { validateReportArchive };
