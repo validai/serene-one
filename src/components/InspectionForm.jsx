@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { PLATFORMS, BUSINESS_TYPES } from '../models/inspection';
+import { PLATFORMS, BUSINESS_TYPES, createEvidenceFromUpload } from '../models/inspection';
 
 export default function InspectionForm({ onRunInspection, isRunning }) {
   const [businessName, setBusinessName] = useState('');
@@ -40,7 +40,9 @@ export default function InspectionForm({ onRunInspection, isRunning }) {
     onRunInspection({
       businessName,
       businessType,
-      uploadedPlatforms: Object.keys(uploads),
+      evidence: Object.entries(uploads).map(([platform, { file }]) =>
+        createEvidenceFromUpload(platform, file)
+      ),
     });
   };
 

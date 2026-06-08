@@ -7,10 +7,6 @@
 
 import { scoreToGrade } from './scoringEngine.js';
 
-function getInspectedPlatforms(inspection) {
-  return [...new Set(inspection.evidence.map((e) => e.platform))];
-}
-
 // ---------------------------------------------------------------------------
 // Report card constants
 // ---------------------------------------------------------------------------
@@ -94,55 +90,30 @@ function buildGradingRows(scores) {
   });
 }
 
-function buildPlatformRecommendation(platform, findings) {
-  const allFindings = [
-    ...findings.critical,
-    ...findings.easyWins,
-    ...findings.opportunities,
-  ];
-
-  const platformFinding = allFindings.find(
-    (f) =>
-      f.title.toLowerCase().includes(platform.toLowerCase()) ||
-      f.description.toLowerCase().includes(platform.toLowerCase())
-  );
-
-  if (platformFinding) return platformFinding.description;
-
-  const defaults = {
-    'Google Business Profile': 'Keep profile complete with hours, photos, and recent reviews.',
-    Website: 'Ensure mobile-friendly design and clear contact information.',
-    Facebook: 'Maintain consistent posting and respond to messages promptly.',
-    Instagram: 'Use high-quality visuals and update bio links regularly.',
-    YouTube: 'Publish helpful content and optimize titles and descriptions.',
-    TikTok: 'Post consistently and align content with brand voice.',
-    LinkedIn: 'Keep company details current and share professional updates.',
-    Zillow: 'Maintain accurate listings and professional agent photography.',
-    'Realtor.com': 'Ensure agent profile and listings are fully optimized.',
-    'Homes.com': 'Keep agent credentials and listing details up to date.',
-  };
-
-  return defaults[platform] ?? 'Continue monitoring and maintain consistent platform presence.';
-}
-
-function buildPlatformRows(inspection, findings) {
-  const platforms = getInspectedPlatforms(inspection);
-
-  return platforms.map((platform) => ({
-    platform,
-    evidenceSubmitted: 'Yes',
-    status: 'Reviewed',
-    recommendation: buildPlatformRecommendation(platform, findings),
+function buildPlatformRows(platformInspections) {
+  return platformInspections.map((inspection) => ({
+    platform: inspection.platform,
+    grade: inspection.grade,
+    status: inspection.status,
+    priority: inspection.priority,
+    recommendation: inspection.recommendations[0] ?? 'Continue monitoring platform presence.',
   }));
 }
 
-function buildInspectorNotes(inspection, scoring, findings) {
-  const platformCount = getInspectedPlatforms(inspection).length;
+function buildInspectorNotes(inspection, scoring, findings, platformInspections) {
+  const platformCount = platformInspections.length;
   const notes = [];
 
   notes.push(
-    `${inspection.businessName} was evaluated as a ${inspection.businessType} based on ${platformCount} platform${platformCount !== 1 ? 's' : ''} with submitted evidence. The composite digital presence score is ${scoring.overallScore} out of 100, earning an overall grade of ${scoring.overallGrade}.`
+    `${inspection.businessName} was evaluated as a ${inspection.businessType} based on ${platformCount} submitted platform screenshot${platformCount !== 1 ? 's' : ''}. The composite digital presence score is ${scoring.overallScore} out of 100, earning an overall grade of ${scoring.overallGrade}.`
   );
+
+  if (platformInspections.length > 0) {
+    const platformSummary = platformInspections
+      .map((pi) => `${pi.platform} (${pi.grade})`)
+      .join(', ');
+    notes.push(`Platform-level inspections: ${platformSummary}.`);
+  }
 
   if (findings.critical.length > 0) {
     notes.push(
@@ -199,8 +170,8 @@ function buildRecommendedNextSteps(findings) {
   return steps.slice(0, 8);
 }
 
-function hasSubmittedEvidence(inspection) {
-  return inspection.evidence.length > 0 && getInspectedPlatforms(inspection).length > 0;
+function hasSubmittedEvidence(platformInspections) {
+  return platformInspections.length > 0;
 }
 
 // ---------------------------------------------------------------------------
@@ -213,10 +184,11 @@ function hasSubmittedEvidence(inspection) {
  * @param {import('../models/inspection.js').Inspection} inspection
  * @param {import('./scoringEngine.js').ScoringResult} scoring
  * @param {import('./findingsEngine.js').FindingsResult} findings
+ * @param {import('./platformAnalysisEngine.js').PlatformInspection[]} platformInspections
  * @returns {import('../models/inspection.js').InspectionReport}
  */
-export function generateReport(inspection, scoring, findings) {
-  const evidenceSubmitted = hasSubmittedEvidence(inspection);
+export function generateReport(inspection, scoring, findings, platformInspections = []) {
+  const evidenceSubmitted = hasSubmittedEvidence(platformInspections);
 
   if (!evidenceSubmitted) {
     return {
@@ -245,14 +217,14 @@ export function generateReport(inspection, scoring, findings) {
       preparedBy: 'Serene One',
     },
     gradingTable: buildGradingRows(scoring.scores),
-    platformTable: buildPlatformRows(inspection, findings),
+    platformTable: buildPlatformRows(platformInspections),
     gradingScale: GRADING_SCALE,
     finalGrade: {
       grade: scoring.overallGrade,
       score: scoring.overallScore,
       label: 'Overall Digital Presence Grade',
     },
-    inspectorNotes: buildInspectorNotes(inspection, scoring, findings),
+    inspectorNotes: buildInspectorNotes(inspection, scoring, findings, platformInspections),
     recommendedNextSteps: buildRecommendedNextSteps(findings),
   };
 
@@ -267,7 +239,7 @@ export function generateReport(inspection, scoring, findings) {
     subject: {
       businessName: inspection.businessName,
       businessType: inspection.businessType,
-      platformsReviewed: getInspectedPlatforms(inspection),
+      platformsReviewed: platformInspections.map((pi) => pi.platform),
     },
     summary: {
       overallGrade: scoring.overallGrade,

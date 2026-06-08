@@ -92,8 +92,9 @@ export default function PrintableReport({ result, onPrint }) {
                   <thead>
                     <tr>
                       <th>Platform</th>
-                      <th>Evidence Submitted</th>
+                      <th>Grade</th>
                       <th>Status</th>
+                      <th>Priority</th>
                       <th>Recommendation</th>
                     </tr>
                   </thead>
@@ -101,8 +102,9 @@ export default function PrintableReport({ result, onPrint }) {
                     {reportCard.platformTable.map((row) => (
                       <tr key={row.platform}>
                         <td>{row.platform}</td>
-                        <td>{row.evidenceSubmitted}</td>
+                        <td className="report-card-grade-cell">{row.grade}</td>
                         <td>{row.status}</td>
+                        <td>{row.priority}</td>
                         <td>{row.recommendation}</td>
                       </tr>
                     ))}
