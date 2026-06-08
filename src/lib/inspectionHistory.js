@@ -28,6 +28,18 @@ function writeStorage(entries) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
 }
 
+function sortPlatforms(platforms) {
+  return [...platforms].sort((a, b) => a.localeCompare(b));
+}
+
+/**
+ * Stable fingerprint for deduplicating saved reports.
+ */
+export function getInspectionFingerprint(result) {
+  const platforms = sortPlatforms(result.inspectedPlatforms || []).join('|');
+  return `${result.businessType}|${platforms}|${result.overallGrade}|${result.overallScore}`;
+}
+
 /**
  * Save a completed inspection result to local history.
  *
@@ -41,6 +53,8 @@ export function saveInspectionResult(result) {
     throw new Error('Inspection result missing id');
   }
 
+  const fingerprint = getInspectionFingerprint(result);
+
   const entry = {
     id: inspectionId,
     referenceId: result.referenceId ?? null,
@@ -52,7 +66,9 @@ export function saveInspectionResult(result) {
     result,
   };
 
-  const history = readStorage().filter((item) => item.id !== entry.id);
+  const history = readStorage().filter(
+    (item) => getInspectionFingerprint(item.result) !== fingerprint
+  );
   history.unshift(entry);
 
   writeStorage(history.slice(0, MAX_HISTORY));
@@ -63,7 +79,9 @@ export function saveInspectionResult(result) {
  * @returns {InspectionHistoryEntry[]}
  */
 export function getInspectionHistory() {
-  return readStorage();
+  return readStorage().sort(
+    (a, b) => new Date(b.savedAt).getTime() - new Date(a.savedAt).getTime()
+  );
 }
 
 /**
@@ -74,6 +92,17 @@ export function getInspectionById(id) {
   return readStorage().find((entry) => entry.id === id) ?? null;
 }
 
+/**
+ * @param {string} id
+ */
+export function deleteInspectionById(id) {
+  writeStorage(readStorage().filter((entry) => entry.id !== id));
+}
+
 export function clearInspectionHistory() {
   localStorage.removeItem(STORAGE_KEY);
+}
+
+export function deleteAllInspections() {
+  clearInspectionHistory();
 }
