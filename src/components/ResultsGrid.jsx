@@ -1,87 +1,75 @@
+import GradeCard from './GradeCard';
+
 const SCORE_CONFIG = [
-  { key: 'visibility', label: 'Visibility', description: 'How discoverable you are online' },
-  { key: 'trust', label: 'Trust', description: 'Signals that build customer confidence' },
-  { key: 'seo', label: 'SEO', description: 'Search engine optimization health' },
-  { key: 'content', label: 'Content', description: 'Quality and consistency of messaging' },
+  { key: 'visibility', label: 'Visibility', description: 'Discoverability across search and maps' },
+  { key: 'trust', label: 'Trust', description: 'Signals that establish customer confidence' },
+  { key: 'seo', label: 'SEO', description: 'Search engine optimization foundation' },
+  { key: 'content', label: 'Content', description: 'Messaging quality and relevance' },
   { key: 'conversion', label: 'Conversion', description: 'Clarity of calls-to-action' },
   {
     key: 'brandConsistency',
     label: 'Brand Consistency',
-    description: 'Visual and voice alignment across platforms',
+    description: 'Alignment across all inspected platforms',
   },
 ];
-
-function getScoreColor(score) {
-  if (score >= 85) return 'text-emerald-600';
-  if (score >= 70) return 'text-blue-600';
-  if (score >= 60) return 'text-amber-600';
-  return 'text-red-600';
-}
-
-function getBarColor(score) {
-  if (score >= 85) return 'bg-emerald-500';
-  if (score >= 70) return 'bg-blue-500';
-  if (score >= 60) return 'bg-amber-500';
-  return 'bg-red-500';
-}
 
 export default function ResultsGrid({ result }) {
   if (!result) return null;
 
-  const { overallGrade, overallScore, scores } = result;
+  const { scores } = result;
 
   return (
-    <section className="no-print py-20 lg:py-28">
+    <section className="no-print py-16 sm:py-24 lg:py-32">
       <div className="section-container">
-        <div className="mx-auto max-w-3xl text-center">
-          <p className="text-sm font-medium uppercase tracking-widest text-serene-accent">
-            Inspection Results
-          </p>
-          <h2 className="mt-3 text-3xl font-semibold tracking-tight text-serene-900">
-            Platform Health Report
-          </h2>
-          <p className="mt-4 text-serene-600">
-            Point-in-time assessment for {result.businessName}
+        <div className="max-w-2xl">
+          <p className="section-label">Inspection Findings</p>
+          <h2 className="section-title mt-4">Assessment Results</h2>
+          <p className="section-subtitle">
+            Point-in-time evaluation for{' '}
+            <span className="font-medium text-serene-700">{result.businessName}</span>
+            {' · '}
+            {result.inspectedAt}
           </p>
         </div>
 
-        <div className="mx-auto mt-12 max-w-4xl">
-          <div className="rounded-2xl border border-serene-200 bg-white p-10 text-center shadow-sm">
-            <p className="text-xs font-medium uppercase tracking-widest text-serene-400">
-              Overall Grade
-            </p>
-            <p className="mt-2 text-7xl font-semibold tracking-tight text-serene-900">
-              {overallGrade}
-            </p>
-            <p className="mt-2 text-sm text-serene-500">Score: {overallScore} / 100</p>
+        <div className="mt-14 grid gap-10 lg:mt-16 lg:grid-cols-5 lg:gap-12">
+          <div className="lg:col-span-2">
+            <GradeCard result={result} className="w-full" />
           </div>
 
-          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {SCORE_CONFIG.map(({ key, label, description }) => {
-              const score = Math.round(scores[key]);
-              return (
-                <div
-                  key={key}
-                  className="rounded-xl border border-serene-200 bg-white p-6 shadow-sm"
-                >
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-serene-900">{label}</p>
-                      <p className="mt-1 text-xs text-serene-500">{description}</p>
+          <div className="lg:col-span-3">
+            <p className="mb-6 text-[11px] font-semibold uppercase tracking-wider text-serene-400">
+              Detailed Score Indices
+            </p>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {SCORE_CONFIG.map(({ key, label, description }) => {
+                const score = Math.round(scores[key]);
+                return (
+                  <div
+                    key={key}
+                    className="border border-serene-100 bg-white px-5 py-6 sm:px-6"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <p className="text-sm font-medium text-serene-900">{label}</p>
+                        <p className="mt-1.5 text-xs leading-relaxed text-serene-400">
+                          {description}
+                        </p>
+                      </div>
+                      <span className="shrink-0 font-serif text-2xl font-medium tabular-nums text-serene-900">
+                        {score}
+                      </span>
                     </div>
-                    <span className={`text-2xl font-semibold ${getScoreColor(score)}`}>
-                      {score}
-                    </span>
+                    <div className="mt-5 h-px w-full bg-serene-100">
+                      <div
+                        className="h-px bg-serene-700 transition-all"
+                        style={{ width: `${score}%` }}
+                      />
+                    </div>
                   </div>
-                  <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-serene-100">
-                    <div
-                      className={`h-full rounded-full transition-all ${getBarColor(score)}`}
-                      style={{ width: `${score}%` }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>

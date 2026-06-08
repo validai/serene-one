@@ -52,29 +52,37 @@ export default function InspectionForm({ onRunInspection, isRunning }) {
     });
   };
 
+  const evidenceCount = Object.keys(uploads).length;
+
   return (
-    <section id="how-it-works" className="no-print py-20 lg:py-28">
+    <section id="how-it-works" className="no-print py-16 sm:py-24 lg:py-32">
       <div className="section-container">
-        <div className="mx-auto max-w-3xl text-center">
-          <p className="text-sm font-medium uppercase tracking-widest text-serene-accent">
-            Run Inspection
-          </p>
-          <h2 className="mt-3 text-3xl font-semibold tracking-tight text-serene-900">
-            Inspect Your Online Presence
-          </h2>
-          <p className="mt-4 text-serene-600">
-            Enter your business details and upload platform screenshots for a point-in-time
-            health inspection.
+        <div className="max-w-2xl">
+          <p className="section-label">Begin Your Inspection</p>
+          <h2 className="section-title mt-4">Submit Business Details & Evidence</h2>
+          <p className="section-subtitle">
+            Provide the subject business information and platform evidence for review. Our
+            inspection team will assess each submitted channel against established presence
+            standards.
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="mx-auto mt-14 max-w-3xl">
-          <div className="rounded-2xl border border-serene-200 bg-white p-8 shadow-sm">
-            <div className="space-y-6">
+        <form onSubmit={handleSubmit} className="mt-14 sm:mt-16 lg:mt-20">
+          <div className="border border-serene-200 bg-white">
+            <div className="border-b border-serene-100 bg-serene-50 px-6 py-4 sm:px-8">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-serene-400">
+                Inspection Intake Form
+              </p>
+              <p className="mt-1 text-xs text-serene-500">
+                All fields required for a complete assessment
+              </p>
+            </div>
+
+            <div className="space-y-10 px-6 py-8 sm:space-y-12 sm:px-8 sm:py-10">
               <div>
                 <label
                   htmlFor="businessName"
-                  className="mb-2 block text-sm font-medium text-serene-700"
+                  className="mb-3 block text-[11px] font-semibold uppercase tracking-wider text-serene-500"
                 >
                   Business Name
                 </label>
@@ -83,8 +91,8 @@ export default function InspectionForm({ onRunInspection, isRunning }) {
                   type="text"
                   value={businessName}
                   onChange={(e) => setBusinessName(e.target.value)}
-                  placeholder="e.g. Serene Realty Group"
-                  className="w-full rounded-lg border border-serene-200 px-4 py-3 text-sm text-serene-900 placeholder:text-serene-400 focus:border-serene-accent focus:outline-none focus:ring-2 focus:ring-serene-accent/20"
+                  placeholder="Legal or trade name of the subject business"
+                  className="w-full border border-serene-200 px-4 py-3.5 text-sm text-serene-900 placeholder:text-serene-400 focus:border-serene-700 focus:outline-none focus:ring-1 focus:ring-serene-700/20"
                   required
                 />
               </div>
@@ -92,15 +100,15 @@ export default function InspectionForm({ onRunInspection, isRunning }) {
               <div>
                 <label
                   htmlFor="businessType"
-                  className="mb-2 block text-sm font-medium text-serene-700"
+                  className="mb-3 block text-[11px] font-semibold uppercase tracking-wider text-serene-500"
                 >
-                  Business Type
+                  Business Classification
                 </label>
                 <select
                   id="businessType"
                   value={businessType}
                   onChange={(e) => setBusinessType(e.target.value)}
-                  className="w-full rounded-lg border border-serene-200 bg-white px-4 py-3 text-sm text-serene-900 focus:border-serene-accent focus:outline-none focus:ring-2 focus:ring-serene-accent/20"
+                  className="w-full border border-serene-200 bg-white px-4 py-3.5 text-sm text-serene-900 focus:border-serene-700 focus:outline-none focus:ring-1 focus:ring-serene-700/20"
                 >
                   {BUSINESS_TYPES.map((type) => (
                     <option key={type} value={type}>
@@ -111,12 +119,24 @@ export default function InspectionForm({ onRunInspection, isRunning }) {
               </div>
 
               <div>
-                <p className="mb-3 text-sm font-medium text-serene-700">
-                  Screenshot Upload
-                </p>
-                <p className="mb-4 text-xs text-serene-500">
-                  Drag and drop screenshots for each platform you want inspected.
-                </p>
+                <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-serene-500">
+                      Inspection Evidence
+                    </p>
+                    <p className="mt-2 max-w-lg text-sm leading-relaxed text-serene-500">
+                      Upload screenshots of each platform profile to be reviewed. Evidence
+                      supports accurate grading across visibility, trust, and consistency
+                      indicators.
+                    </p>
+                  </div>
+                  {evidenceCount > 0 && (
+                    <p className="shrink-0 text-xs font-medium text-serene-600">
+                      {evidenceCount} file{evidenceCount !== 1 ? 's' : ''} submitted
+                    </p>
+                  )}
+                </div>
+
                 <div className="grid gap-3 sm:grid-cols-2">
                   {PLATFORMS.map((platform) => (
                     <div
@@ -127,37 +147,37 @@ export default function InspectionForm({ onRunInspection, isRunning }) {
                       }}
                       onDragLeave={() => setDragOver(null)}
                       onDrop={(e) => handleDrop(platform, e)}
-                      className={`relative rounded-lg border-2 border-dashed p-4 transition-colors ${
+                      className={`border p-4 transition-colors sm:p-5 ${
                         dragOver === platform
-                          ? 'border-serene-accent bg-serene-50'
+                          ? 'border-serene-700 bg-serene-50'
                           : uploads[platform]
-                            ? 'border-emerald-300 bg-emerald-50/50'
-                            : 'border-serene-200 bg-serene-50/50 hover:border-serene-300'
+                            ? 'border-serene-300 bg-serene-50/60'
+                            : 'border-dashed border-serene-200 bg-white hover:border-serene-300'
                       }`}
                     >
-                      <p className="text-xs font-medium text-serene-700">{platform}</p>
+                      <p className="text-xs font-medium text-serene-800">{platform}</p>
                       {uploads[platform] ? (
-                        <div className="mt-2 flex items-center gap-2">
+                        <div className="mt-3 flex items-center gap-3">
                           <img
                             src={uploads[platform].preview}
                             alt={platform}
-                            className="h-10 w-10 rounded object-cover"
+                            className="h-11 w-11 border border-serene-200 object-cover"
                           />
-                          <span className="flex-1 truncate text-xs text-emerald-700">
-                            Uploaded
+                          <span className="flex-1 truncate text-xs text-serene-600">
+                            Evidence on file
                           </span>
                           <button
                             type="button"
                             onClick={() => removeUpload(platform)}
-                            className="text-xs text-serene-500 hover:text-red-600"
+                            className="text-xs text-serene-400 underline-offset-2 hover:text-serene-700 hover:underline"
                           >
                             Remove
                           </button>
                         </div>
                       ) : (
-                        <label className="mt-2 block cursor-pointer">
-                          <span className="text-xs text-serene-500">
-                            Drop image or click to upload
+                        <label className="mt-3 block cursor-pointer">
+                          <span className="text-xs text-serene-400">
+                            Drop screenshot or click to attach
                           </span>
                           <input
                             type="file"
@@ -173,13 +193,18 @@ export default function InspectionForm({ onRunInspection, isRunning }) {
               </div>
             </div>
 
-            <button
-              type="submit"
-              disabled={isRunning}
-              className="mt-8 w-full rounded-lg bg-serene-900 py-3.5 text-sm font-medium text-white transition-colors hover:bg-serene-800 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {isRunning ? 'Running Inspection…' : 'Run Grade Inspection'}
-            </button>
+            <div className="border-t border-serene-100 px-6 py-6 sm:px-8 sm:py-8">
+              <button
+                type="submit"
+                disabled={isRunning}
+                className="btn-primary w-full disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isRunning ? 'Conducting Inspection…' : 'Run Grade Inspection'}
+              </button>
+              <p className="mt-4 text-center text-[11px] text-serene-400">
+                Results generated via Serene One inspection methodology · Not a live audit
+              </p>
+            </div>
           </div>
         </form>
       </div>

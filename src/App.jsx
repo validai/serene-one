@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
+import WhyThisMatters from './components/WhyThisMatters';
 import InspectionForm from './components/InspectionForm';
 import ResultsGrid from './components/ResultsGrid';
 import FindingsPanel from './components/FindingsPanel';
@@ -50,6 +51,7 @@ function App() {
       <Navbar onStartInspection={scrollToInspection} />
       <main>
         <Hero onStartInspection={scrollToInspection} onViewSample={handleViewSample} />
+        <WhyThisMatters />
         <InspectionForm onRunInspection={handleRunInspection} isRunning={isRunning} />
         <div id="results">
           {result && (
@@ -61,12 +63,20 @@ function App() {
         </div>
         {result && <PrintableReport result={result} onPrint={handlePrint} />}
       </main>
-      <footer className="no-print border-t border-serene-100 py-10">
-        <div className="section-container text-center">
-          <p className="text-sm font-medium text-serene-900">Serene One</p>
-          <p className="mt-1 text-xs text-serene-400">
-            Platform Health Inspection · Version 1.0
-          </p>
+      <footer className="no-print border-t border-serene-100 py-12 sm:py-16">
+        <div className="section-container">
+          <div className="flex flex-col items-center gap-6 text-center sm:flex-row sm:justify-between sm:text-left">
+            <div>
+              <p className="font-serif text-base font-medium text-serene-900">Serene One</p>
+              <p className="mt-1 text-xs text-serene-400">
+                Platform Health Inspection Services
+              </p>
+            </div>
+            <div className="text-xs leading-relaxed text-serene-400">
+              <p>Independent digital presence assessments</p>
+              <p className="mt-1">Point-in-time · Client-ready deliverables</p>
+            </div>
+          </div>
         </div>
       </footer>
     </div>

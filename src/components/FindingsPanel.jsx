@@ -2,26 +2,20 @@ const SECTIONS = [
   {
     key: 'critical',
     title: 'Critical Findings',
-    subtitle: 'Issues that may significantly impact performance',
-    accent: 'border-red-200 bg-red-50/50',
-    dot: 'bg-red-500',
-    titleColor: 'text-red-800',
+    subtitle: 'Issues requiring immediate attention',
+    border: 'border-t-serene-900',
   },
   {
     key: 'easyWins',
-    title: 'Easy Wins',
-    subtitle: 'Quick improvements with high return on effort',
-    accent: 'border-emerald-200 bg-emerald-50/50',
-    dot: 'bg-emerald-500',
-    titleColor: 'text-emerald-800',
+    title: 'Recommended Actions',
+    subtitle: 'High-impact improvements with minimal effort',
+    border: 'border-t-serene-600',
   },
   {
     key: 'opportunities',
-    title: 'Improvement Opportunities',
-    subtitle: 'Strategic enhancements for long-term growth',
-    accent: 'border-blue-200 bg-blue-50/50',
-    dot: 'bg-blue-500',
-    titleColor: 'text-blue-800',
+    title: 'Strategic Opportunities',
+    subtitle: 'Long-term enhancements for sustained growth',
+    border: 'border-t-serene-400',
   },
 ];
 
@@ -31,41 +25,40 @@ export default function FindingsPanel({ result }) {
   const { findings } = result;
 
   return (
-    <section className="no-print border-t border-serene-100 py-20 lg:py-28">
+    <section className="no-print border-t border-serene-100 bg-serene-50/30 py-16 sm:py-24 lg:py-32">
       <div className="section-container">
-        <div className="mx-auto max-w-3xl text-center">
-          <p className="text-sm font-medium uppercase tracking-widest text-serene-accent">
-            Detailed Findings
+        <div className="max-w-2xl">
+          <p className="section-label">Inspector Notes</p>
+          <h2 className="section-title mt-4">Detailed Findings</h2>
+          <p className="section-subtitle">
+            Observations and recommendations based on submitted evidence and platform
+            presence indicators.
           </p>
-          <h2 className="mt-3 text-3xl font-semibold tracking-tight text-serene-900">
-            Actionable Insights
-          </h2>
         </div>
 
-        <div className="mx-auto mt-12 grid max-w-5xl gap-6 lg:grid-cols-3">
-          {SECTIONS.map(({ key, title, subtitle, accent, dot, titleColor }) => (
-            <div
-              key={key}
-              className={`rounded-2xl border p-6 ${accent}`}
-            >
-              <div className="mb-5">
-                <div className="flex items-center gap-2">
-                  <span className={`h-2 w-2 rounded-full ${dot}`} />
-                  <h3 className={`text-sm font-semibold ${titleColor}`}>{title}</h3>
-                </div>
-                <p className="mt-1 text-xs text-serene-500">{subtitle}</p>
+        <div className="mt-14 grid gap-8 sm:mt-16 lg:grid-cols-3 lg:gap-10">
+          {SECTIONS.map(({ key, title, subtitle, border }) => (
+            <div key={key} className={`border-t-2 bg-white ${border}`}>
+              <div className="px-6 py-6 sm:px-7 sm:py-7">
+                <h3 className="font-serif text-lg font-medium text-serene-900">{title}</h3>
+                <p className="mt-2 text-xs text-serene-400">{subtitle}</p>
               </div>
-              <ul className="space-y-4">
+              <ul className="space-y-px border-t border-serene-100">
                 {(findings[key] || []).map((item, i) => (
-                  <li key={i} className="rounded-lg border border-white/60 bg-white p-4">
+                  <li
+                    key={i}
+                    className="border-b border-serene-50 px-6 py-5 last:border-b-0 sm:px-7"
+                  >
                     <p className="text-sm font-medium text-serene-900">{item.title}</p>
-                    <p className="mt-1 text-xs leading-relaxed text-serene-600">
+                    <p className="mt-2 text-sm leading-relaxed text-serene-500">
                       {item.description}
                     </p>
                   </li>
                 ))}
                 {(findings[key] || []).length === 0 && (
-                  <li className="text-xs text-serene-500">No items in this category.</li>
+                  <li className="px-6 py-5 text-sm text-serene-400 sm:px-7">
+                    No findings in this category.
+                  </li>
                 )}
               </ul>
             </div>
