@@ -1,19 +1,12 @@
 import { useCallback, useState } from 'react';
 import Navbar from './components/Navbar';
-import Hero from './components/Hero';
-import WhyThisMatters from './components/WhyThisMatters';
 import InspectionForm from './components/InspectionForm';
 import ResultsGrid from './components/ResultsGrid';
 import FindingsPanel from './components/FindingsPanel';
 import PrintableReport from './components/PrintableReport';
 import SavedReports from './components/SavedReports';
 import { saveInspectionResult } from './lib/inspectionHistory';
-import {
-  runInspection,
-  createSampleInspection,
-  runInspectionPipeline,
-  formatPipelineResultForDisplay,
-} from './models/inspection';
+import { runInspection } from './models/inspection';
 
 function App() {
   const [result, setResult] = useState(null);
@@ -21,8 +14,8 @@ function App() {
   const [historyVersion, setHistoryVersion] = useState(0);
   const [formResetKey, setFormResetKey] = useState(0);
 
-  const scrollToInspection = useCallback(() => {
-    document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' });
+  const scrollToIntake = useCallback(() => {
+    document.getElementById('intake')?.scrollIntoView({ behavior: 'smooth' });
   }, []);
 
   const scrollToSavedReports = useCallback(() => {
@@ -52,16 +45,6 @@ function App() {
     [persistResult]
   );
 
-  const handleViewSample = useCallback(() => {
-    const sampleResult = formatPipelineResultForDisplay(
-      runInspectionPipeline(createSampleInspection())
-    );
-    persistResult(sampleResult);
-    setTimeout(() => {
-      document.getElementById('report-card')?.scrollIntoView({ behavior: 'smooth' });
-    }, 100);
-  }, [persistResult]);
-
   const handleViewReport = useCallback((loadedResult) => {
     setResult(loadedResult);
     setTimeout(() => {
@@ -72,8 +55,8 @@ function App() {
   const handleNewReport = useCallback(() => {
     setResult(null);
     setFormResetKey((key) => key + 1);
-    scrollToInspection();
-  }, [scrollToInspection]);
+    scrollToIntake();
+  }, [scrollToIntake]);
 
   const handlePrint = useCallback(() => {
     window.print();
@@ -81,13 +64,8 @@ function App() {
 
   return (
     <div className="min-h-screen bg-white">
-      <Navbar
-        onStartInspection={scrollToInspection}
-        onViewReports={scrollToSavedReports}
-      />
+      <Navbar onViewReports={scrollToSavedReports} />
       <main>
-        <Hero onStartInspection={scrollToInspection} onViewSample={handleViewSample} />
-        <WhyThisMatters />
         <InspectionForm
           key={formResetKey}
           onRunInspection={handleRunInspection}
@@ -110,22 +88,6 @@ function App() {
         )}
         <SavedReports refreshKey={historyVersion} onViewReport={handleViewReport} />
       </main>
-      <footer className="no-print border-t border-serene-border py-12 sm:py-16">
-        <div className="section-container">
-          <div className="flex flex-col items-center gap-6 text-center sm:flex-row sm:justify-between sm:text-left">
-            <div>
-              <p className="font-serif text-base font-medium text-serene-navy">Serene One</p>
-              <p className="mt-1 text-sm text-serene-muted">
-                Platform Health Inspection Services
-              </p>
-            </div>
-            <div className="text-sm leading-relaxed text-serene-muted">
-              <p>Independent digital presence assessments</p>
-              <p className="mt-1">Point-in-time · Client-ready deliverables</p>
-            </div>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }

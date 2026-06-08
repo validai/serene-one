@@ -49,26 +49,24 @@ export default function InspectionForm({ onRunInspection, isRunning }) {
   const evidenceCount = Object.keys(uploads).length;
 
   return (
-    <section id="how-it-works" className="no-print py-16 sm:py-24 lg:py-32">
+    <section id="intake" className="no-print py-10 sm:py-14">
       <div className="section-container">
         <div className="max-w-2xl">
-          <p className="section-label">Begin Your Inspection</p>
-          <h2 className="section-title mt-4">Submit Business Details & Evidence</h2>
+          <h1 className="section-title">Create Report Card</h1>
           <p className="section-subtitle">
-            Provide the subject business information and platform evidence for review. Our
-            inspection team will assess each submitted channel against established presence
-            standards.
+            Enter client details, attach platform evidence, and generate a point-in-time
+            Digital Presence Report Card.
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="mt-14 sm:mt-16 lg:mt-20">
+        <form onSubmit={handleSubmit} className="mt-10 sm:mt-12">
           <div className="border border-serene-border bg-white">
             <div className="border-b border-serene-border bg-serene-blue-soft/40 px-6 py-4 sm:px-8">
               <p className="text-xs font-semibold uppercase tracking-[0.14em] text-serene-blue">
-                Inspection Intake Form
+                Client Intake
               </p>
               <p className="mt-1 text-sm text-serene-slate">
-                All fields required for a complete assessment
+                All fields required before running a grade inspection
               </p>
             </div>
 
@@ -85,7 +83,7 @@ export default function InspectionForm({ onRunInspection, isRunning }) {
                   type="text"
                   value={businessName}
                   onChange={(e) => setBusinessName(e.target.value)}
-                  placeholder="Legal or trade name of the subject business"
+                  placeholder="Legal or trade name of the client business"
                   className="w-full border border-serene-border px-4 py-3.5 text-sm text-serene-navy placeholder:text-serene-muted focus:border-serene-blue focus:outline-none focus:ring-2 focus:ring-serene-blue/20"
                   required
                 />
@@ -116,17 +114,16 @@ export default function InspectionForm({ onRunInspection, isRunning }) {
                 <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-wider text-serene-slate">
-                      Inspection Evidence
+                      Platform Evidence
                     </p>
                     <p className="mt-2 max-w-lg text-sm leading-relaxed text-serene-slate">
-                      Upload screenshots of each platform profile to be reviewed. Evidence
-                      supports accurate grading across visibility, trust, and consistency
-                      indicators.
+                      Upload screenshots for each platform to include in the client report
+                      card. Serene One grades only submitted evidence.
                     </p>
                   </div>
                   {evidenceCount > 0 && (
                     <p className="shrink-0 text-sm font-medium text-serene-slate">
-                      {evidenceCount} file{evidenceCount !== 1 ? 's' : ''} submitted
+                      {evidenceCount} file{evidenceCount !== 1 ? 's' : ''} attached
                     </p>
                   )}
                 </div>
