@@ -55,9 +55,14 @@ export default function FindingsPanel({ result }) {
                     </p>
                   </li>
                 ))}
-                {(findings[key] || []).length === 0 && (
+                {(findings[key] || []).length === 0 && key !== 'critical' && (
                   <li className="px-6 py-5 text-sm text-serene-muted sm:px-7">
                     No findings in this category.
+                  </li>
+                )}
+                {key === 'critical' && (findings[key] || []).length === 0 && (
+                  <li className="px-6 py-5 text-sm text-serene-muted sm:px-7">
+                    No critical issues flagged.
                   </li>
                 )}
               </ul>

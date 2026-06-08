@@ -281,7 +281,7 @@ export function runInspectionPipeline(inspection) {
 
   const platformInspections = analyzeAllPlatformEvidence(submitted);
   const scoring = scoreInspection(submitted, platformInspections);
-  const findings = generateFindings(submitted, scoring);
+  const findings = generateFindings(submitted, scoring, platformInspections);
   const report = generateReport(submitted, scoring, findings, platformInspections);
 
   const completed = {

@@ -7,6 +7,10 @@
 
 import { sortPlatforms, stableHash } from './stableHash.js';
 
+function getInspectedPlatforms(inspection) {
+  return sortPlatforms([...new Set(inspection.evidence.map((e) => e.platform))]);
+}
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -42,13 +46,16 @@ import { sortPlatforms, stableHash } from './stableHash.js';
 // Helpers
 // ---------------------------------------------------------------------------
 
-function generateId(prefix) {
-  return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+function generateId(prefix, seed = '') {
+  const suffix = seed
+    ? stableHash(`${prefix}|${seed}`).toString(36)
+    : stableHash(prefix).toString(36);
+  return `${prefix}_${suffix}`;
 }
 
 function createFinding({ title, description, category, dimension }) {
   return {
-    id: generateId('find'),
+    id: generateId('find', `${category}|${title}`),
     title,
     description,
     category,
@@ -68,7 +75,7 @@ function buildRecommendations(findings) {
   for (const [group, priority] of Object.entries(priorityMap)) {
     for (const finding of findings[group] || []) {
       recommendations.push({
-        id: generateId('rec'),
+        id: generateId('rec', `${priority}|${finding.title}`),
         title: finding.title,
         description: finding.description,
         priority,
@@ -134,6 +141,69 @@ function evaluateCriticalFindings({ businessName, businessType, inspectedPlatfor
   }
 
   return findings.slice(0, 4);
+}
+
+const PLATFORM_PRIMARY_DIMENSION = {
+  'Google Business Profile': 'visibility',
+  Website: 'seo',
+  Facebook: 'trust',
+  Instagram: 'content',
+  YouTube: 'content',
+  TikTok: 'visibility',
+  LinkedIn: 'trust',
+  Zillow: 'visibility',
+  'Realtor.com': 'visibility',
+  'Homes.com': 'visibility',
+};
+
+const CRITICAL_FALLBACK_TITLES = {
+  visibility: 'Limited local visibility signals',
+  seo: 'Incomplete profile optimization',
+  trust: 'Trust signals require attention',
+  content: 'Incomplete profile optimization',
+  conversion: 'Incomplete profile optimization',
+  brandConsistency: 'Platform consistency needs review',
+};
+
+function mapPlatformWeaknessToCriticalFinding(platformInspection) {
+  const dimension =
+    PLATFORM_PRIMARY_DIMENSION[platformInspection.platform] ?? 'brandConsistency';
+  const weakness = platformInspection.weaknesses[0] ?? platformInspection.recommendations[0];
+  const title = CRITICAL_FALLBACK_TITLES[dimension] ?? 'Platform consistency needs review';
+
+  return createFinding({
+    title,
+    description: `${platformInspection.platform}: ${weakness}`,
+    category: 'critical',
+    dimension,
+  });
+}
+
+function ensureCriticalFindings(critical, platformInspections) {
+  if (critical.length > 0) return critical;
+  if (platformInspections.length === 0) return critical;
+
+  const weakestPlatforms = [...platformInspections].sort(
+    (a, b) => a.qualityScore - b.qualityScore
+  );
+
+  const fallbackFindings = weakestPlatforms
+    .slice(0, 2)
+    .map((inspection) => mapPlatformWeaknessToCriticalFinding(inspection));
+
+  if (fallbackFindings.length === 0) {
+    fallbackFindings.push(
+      createFinding({
+        title: 'Platform consistency needs review',
+        description:
+          'Submitted platform profiles should be reviewed for alignment across messaging, imagery, and contact details.',
+        category: 'critical',
+        dimension: 'brandConsistency',
+      })
+    );
+  }
+
+  return fallbackFindings;
 }
 
 function evaluateEasyWins({ businessType, inspectedPlatforms, scores }) {
@@ -258,16 +328,20 @@ function evaluateOpportunities({ businessType, inspectedPlatforms, scores }) {
  *
  * @param {import('../models/inspection.js').Inspection} inspection
  * @param {import('./scoringEngine.js').ScoringResult} scoring
+ * @param {import('./platformAnalysisEngine.js').PlatformInspection[]} [platformInspections=[]]
  * @returns {FindingsResult}
  */
-export function generateFindings(inspection, scoring) {
+export function generateFindings(inspection, scoring, platformInspections = []) {
   const { businessName, businessType } = inspection;
   const inspectedPlatforms = getInspectedPlatforms(inspection);
   const { scores } = scoring;
 
   const context = { businessName, businessType, inspectedPlatforms, scores };
 
-  const critical = evaluateCriticalFindings(context);
+  const critical = ensureCriticalFindings(
+    evaluateCriticalFindings(context),
+    platformInspections
+  );
   const easyWins = evaluateEasyWins(context);
   const opportunities = evaluateOpportunities(context);
 
